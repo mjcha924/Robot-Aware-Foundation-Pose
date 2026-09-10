@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Downloaded datasets, model weights, and simulator exports
+data/**
+!data/.gitkeep
+!data/isaac_exports/
+!data/isaac_exports/.gitkeep
+weights/
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+*.onnx
+
+# Generated experiment artifacts
+outputs/**
+!outputs/.gitkeep
+experiments/**/artifacts/
+wandb/
+
+# Native build products
+build/
+dist/
+*.egg-info/
+*.so
