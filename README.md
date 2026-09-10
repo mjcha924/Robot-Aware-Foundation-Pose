@@ -7,10 +7,15 @@ FoundationPose demo before implementing or evaluating any method changes.
 
 ## Current state
 
-Setup is in progress. See [`SETUP_STATUS.md`](SETUP_STATUS.md) for the exact
-checkpoint, machine prerequisites, and next command to run. The upstream
-FoundationPose source is pinned as a Git submodule under
-`third_party/FoundationPose`.
+The unchanged, pretrained model-based FoundationPose demo has passed on the
+project machine's RTX 3070. It produced poses for all 737 frames of the mustard
+bottle sequence. See [`docs/BASELINE.md`](docs/BASELINE.md) for the reproducible
+run record and [`SETUP_STATUS.md`](SETUP_STATUS.md) for the current project
+checkpoint.
+
+The upstream FoundationPose source is pinned as a Git submodule under
+`third_party/FoundationPose`; downloaded assets and generated results are kept
+outside Git.
 
 ## Repository layout
 
@@ -38,6 +43,13 @@ For an existing clone, initialize the pinned dependency with:
 
 ```bash
 git submodule update --init --recursive
+```
+
+After installing the upstream image, weights, demo data, and native extension
+described in the baseline record, reproduce the unchanged demo with:
+
+```bash
+./scripts/run_foundationpose_baseline.sh
 ```
 
 ## Licensing and data

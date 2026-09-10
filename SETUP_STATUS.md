@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-10 (Asia/Seoul)
 
-## Paused checkpoint
+## Current checkpoint
 
 - Project workspace: `/home/mjcha/effector-aware-foundationpose`
 - Existing FoundationPose checkout: `third_party/FoundationPose`
@@ -13,10 +13,13 @@ Last updated: 2026-09-10 (Asia/Seoul)
 - Docker 29.4.0 and NVIDIA Container Toolkit 1.19.0 are installed
 - System CUDA compiler (`nvcc`) is absent
 - About 281 GiB disk space and 31 GiB RAM were available
-- No FoundationPose weights/demo data downloaded
+- Both required FoundationPose checkpoint sets are downloaded and verified
+- The 737-frame `mustard0` RGB-D demo and textured mesh are installed locally
 - No EA-FoundationPose method code implemented
-- Pulled only the CUDA 12.4.1 base image used for the GPU smoke test
-- No FoundationPose image, large data download, simulation, or training job started
+- The official FoundationPose image is pulled and tagged `foundationpose:latest`
+- The pinned checkout's native `mycpp` extension is built
+- The unchanged pretrained model-based demo passed on all 737 frames
+- No simulation or training job has been started
 
 ## Repository progress
 
@@ -45,9 +48,9 @@ and passed on 2026-09-10.
 5. Do not begin Isaac Sim integration or candidate pruning until the baseline
    demo passes and later URDF/camera overlay alignment is trustworthy.
 
-## Host gate passed
+## Baseline passed
 
-The following checks completed successfully:
+The host and container checks completed successfully:
 
 ```bash
 cd /home/mjcha/effector-aware-foundationpose
@@ -62,14 +65,25 @@ with driver 595.91.07. Docker Engine 29.4.0 is running, the user is in the
 `docker` group, the NVIDIA runtime/CDI devices are registered, and the CUDA
 12.4.1 container successfully ran `nvidia-smi`.
 
-The next repository action is to create a private GitHub repository and push
-`main`. The GitHub CLI is not installed and no GitHub token is exposed. Existing
-local remotes and commits strongly indicate that the owner is `chlgkals07`.
+The unchanged `python run_demo.py` baseline then completed all 737 frames using
+the default 252 pose candidates, five registration refinements, and two tracking
+refinements. A second visualization-enabled run saved 737 overlays and poses
+under `outputs/foundationpose_baseline/`; representative first, middle, and last
+frames were visually aligned. See `docs/BASELINE.md` for provenance, hashes,
+environment versions, and numerical validation.
 
-Next, create the private GitHub remote, pull the official FoundationPose image,
-obtain only the two model-based weight sets (`2023-10-28-18-33-37` refiner and
-`2024-01-11-20-02-45` scorer) plus demo data, build the native extension, and
-run `python run_demo.py` unchanged.
+## Next actions
+
+1. Create a private GitHub repository and push `main`. The GitHub CLI is not
+   installed and no GitHub token is exposed. Existing local history strongly
+   indicates the owner is `chlgkals07`.
+2. Define the Isaac Sim export contract: RGB, metric aligned depth, object mask,
+   camera intrinsics, camera/world transform, end-effector/world transform, and
+   the object mesh with explicit units and coordinate conventions.
+3. Export one short static-object sequence and validate its camera/URDF overlay
+   before implementing end-effector-aware candidate pruning.
+4. Preserve the upstream baseline as the control; place all new method code in
+   this repository rather than modifying the FoundationPose submodule.
 
 ## License warning
 
