@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ea-foundationpose:schema:isaac-export:1.0",
+  "title": "EA-FoundationPose Isaac export manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sequence_id",
+    "frame_count",
+    "frames_file",
+    "units",
+    "image",
+    "camera",
+    "mesh",
+    "segmentation"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "sequence_id": { "type": "string", "minLength": 1 },
+    "frame_count": { "type": "integer", "minimum": 1 },
+    "frames_file": { "type": "string", "const": "frames.jsonl" },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["length", "depth_encoding", "depth_scale_to_m"],
+      "properties": {
+        "length": { "const": "meter" },
+        "depth_encoding": { "const": "uint16_mm" },
+        "depth_scale_to_m": { "const": 0.001 }
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "rgb_format", "depth_format", "mask_format"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "rgb_format": { "const": "png_rgb8" },
+        "depth_format": { "const": "png_uint16" },
+        "mask_format": { "const": "png_uint8_binary" }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "convention", "K"],
+      "properties": {
+        "model": { "const": "pinhole" },
+        "convention": { "const": "opencv_x_right_y_down_z_forward" },
+        "K": { "$ref": "#/$defs/matrix3" }
+      }
+    },
+    "mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "units", "T_object_mesh"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "units": { "const": "meter" },
+        "T_object_mesh": { "$ref": "#/$defs/matrix4" }
+      }
+    },
+    "segmentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_id", "initial_mask_only"],
+      "properties": {
+        "object_id": { "type": "integer", "minimum": 0 },
+        "initial_mask_only": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "number": { "type": "number" },
+    "row3": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "matrix3": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/row3" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "row4": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/number" },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "matrix4": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/row4" },
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

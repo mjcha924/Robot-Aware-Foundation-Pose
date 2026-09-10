@@ -26,6 +26,8 @@ Last updated: 2026-09-10 (Asia/Seoul)
 - Initialized the project as a local Git repository on branch `main`
 - Registered `third_party/FoundationPose` as a submodule at the pinned commit
 - Added the minimal README, directory scaffold, and artifact exclusions
+- Defined the versioned Isaac export contract and added a dependency-free
+  validator with passing unit tests
 - Downloaded weights, demo data, simulator exports, and generated outputs are
   excluded from Git
 - Recovered the established local GitHub identity from existing repository
@@ -77,10 +79,9 @@ environment versions, and numerical validation.
 1. Create a private GitHub repository and push `main`. The GitHub CLI is not
    installed and no GitHub token is exposed. Existing local history strongly
    indicates the owner is `chlgkals07`.
-2. Define the Isaac Sim export contract: RGB, metric aligned depth, object mask,
-   camera intrinsics, camera/world transform, end-effector/world transform, and
-   the object mesh with explicit units and coordinate conventions.
-3. Export one short static-object sequence and validate its camera/URDF overlay
+2. Export one short static-object sequence using the contract in
+   `docs/ISAAC_EXPORT_CONTRACT.md` and run `scripts/validate_isaac_export.py`.
+3. Validate its camera/URDF overlay
    before implementing end-effector-aware candidate pruning.
 4. Preserve the upstream baseline as the control; place all new method code in
    this repository rather than modifying the FoundationPose submodule.

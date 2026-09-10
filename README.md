@@ -32,6 +32,14 @@ outside Git.
 - `src/candidate_pruning/`: end-effector-aware pose candidate filtering
 - `src/evaluation/`: metrics and evaluation support
 
+Isaac Sim captures must follow the versioned
+[`docs/ISAAC_EXPORT_CONTRACT.md`](docs/ISAAC_EXPORT_CONTRACT.md). Validate a
+capture before inference with:
+
+```bash
+python3 scripts/validate_isaac_export.py data/isaac_exports/<sequence>
+```
+
 ## Clone
 
 ```bash

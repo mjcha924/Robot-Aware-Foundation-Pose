@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "sequence_id": "static_object_smoke_001",
+  "frame_count": 60,
+  "frames_file": "frames.jsonl",
+  "units": {
+    "length": "meter",
+    "depth_encoding": "uint16_mm",
+    "depth_scale_to_m": 0.001
+  },
+  "image": {
+    "width": 640,
+    "height": 480,
+    "rgb_format": "png_rgb8",
+    "depth_format": "png_uint16",
+    "mask_format": "png_uint8_binary"
+  },
+  "camera": {
+    "model": "pinhole",
+    "convention": "opencv_x_right_y_down_z_forward",
+    "K": [
+      [615.0, 0.0, 320.0],
+      [0.0, 615.0, 240.0],
+      [0.0, 0.0, 1.0]
+    ]
+  },
+  "mesh": {
+    "path": "mesh/object.obj",
+    "units": "meter",
+    "T_object_mesh": [
+      [1.0, 0.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0, 0.0],
+      [0.0, 0.0, 1.0, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ]
+  },
+  "segmentation": {
+    "object_id": 1,
+    "initial_mask_only": true
+  }
+}
