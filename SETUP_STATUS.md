@@ -21,6 +21,9 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - The unchanged pretrained model-based demo passed on all 737 frames
 - The installed Isaac renderer was tested and is blocked by a native
   Isaac Sim 5.1/driver-595 `librtx.scenedb.plugin.so` crash
+- A simulated Ubuntu driver transaction confirms `nvidia-driver-580` 580.178.04
+  will replace the installed 595.91.07 package set cleanly; the real transaction
+  is pending because non-interactive sudo requires the host account password
 
 ## Repository progress
 
@@ -91,7 +94,8 @@ environment versions, and numerical validation.
 1. Move Isaac Sim/driver to a compatible renderer combination. Local logs show
    this host fully loaded Isaac Sim 5.1 with driver 580.126.09 in March 2026.
    The lowest-code-migration path is therefore the 580 driver branch with Isaac
-   Sim 5.1/Isaac Lab 2.3.x, preferably using ROBOTIS Lab's pinned Docker image.
+   Sim 5.1/Isaac Lab 2.3.x, preferably using ROBOTIS Lab's pinned Docker image
+   through `scripts/run_omy_isaac_capture_docker.sh`.
    The longer-term alternative is a separate Isaac Sim 6.0.1/Isaac Lab 3.0
    environment plus ROBOTIS Lab migration. The installed
    Isaac Sim 5.1.0.0 crashes in `librtx.scenedb.plugin.so` with driver 595.91.07,
@@ -101,7 +105,8 @@ environment versions, and numerical validation.
    8 GB remains an unsupported configuration even with the tested driver.
    The shared `env_isaaclab` also has pre-existing dependency conflicts; see
    `docs/ISAAC_INTEGRATION.md`.
-2. Run `scripts/run_omy_isaac_capture.sh`, validate the short export, then run
+2. Run `scripts/run_omy_isaac_capture_docker.sh`, validate the short export,
+   then run
    `scripts/run_isaac_foundationpose.sh` and inspect the camera/robot overlay.
 3. Implement candidate pruning only after the real Isaac capture passes.
 4. Preserve the upstream baseline as the control; place all new method code in

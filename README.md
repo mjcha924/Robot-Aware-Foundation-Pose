@@ -52,6 +52,9 @@ and prioritized next steps, see
 The renderer crash diagnosis and recovery gates are documented in
 [`docs/ISAAC_CRASH_RECOVERY.md`](docs/ISAAC_CRASH_RECOVERY.md).
 
+After the host driver is restored to the 580 branch, the preferred isolated
+OMY capture entry point is `scripts/run_omy_isaac_capture_docker.sh`.
+
 ## Clone
 
 ```bash

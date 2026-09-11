@@ -96,13 +96,14 @@ changed during this work.
 ## Next steps
 
 1. Restore the previously working renderer family: move the host from driver
-   595.91.07 back to the 580 branch, then use ROBOTIS Lab's pinned Isaac Sim
-   5.1/Isaac Lab 2.3.x Docker stack. A separate Isaac Sim 6.0.1/Isaac Lab 3.0
-   environment is the longer-term option but requires checking and likely
-   migrating ROBOTIS Lab APIs.
+   595.91.07 back to the 580 branch, then use
+   `scripts/run_omy_isaac_capture_docker.sh` with ROBOTIS Lab's pinned Isaac Sim
+   5.1/Isaac Lab 2.3.x image. A separate Isaac Sim 6.0.1/Isaac Lab 3.0 environment
+   is the longer-term option but requires checking and likely migrating ROBOTIS
+   Lab APIs.
 2. Re-run the unchanged Isaac Lab camera tutorial as the renderer gate.
-3. Run `scripts/run_omy_isaac_capture.sh`, then validate the generated sequence
-   with `scripts/validate_isaac_export.py`.
+3. Run `scripts/run_omy_isaac_capture_docker.sh`, then validate the generated
+   sequence with `scripts/validate_isaac_export.py`.
 4. Run `scripts/run_isaac_foundationpose.sh` on that capture and verify RGB-D,
    mesh, camera, object, and end-effector overlays.
 5. Freeze that run as the Isaac control, define quantitative pose/occlusion

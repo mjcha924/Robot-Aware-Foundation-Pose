@@ -2,6 +2,19 @@
 
 Last verified: 2026-09-11 (Asia/Seoul)
 
+## Execution status
+
+An `apt-get` simulation confirms that installing Ubuntu's current
+`nvidia-driver-580` package (580.178.04) will remove the 20 installed 595-series
+components and install the corresponding 580-series set. No compute workload is
+using the GPU. The actual transaction has not run because this automation
+session cannot provide the host account's sudo password; the currently loaded
+driver remains 595.91.07 until the install and reboot are completed.
+
+The isolated ROBOTIS image is already present locally, and
+`scripts/run_omy_isaac_capture_docker.sh` is ready for the first post-reboot
+capture attempt.
+
 ## Diagnosis
 
 The failure is below the EA-FoundationPose and ROBOTIS Lab application layers.
@@ -54,20 +67,23 @@ robotics projects.
    modinfo nvidia | rg '^version:'
    ```
 
-3. Avoid the conflicted shared Conda environment. Build/start the existing
-   ROBOTIS Lab Docker image, which pins Isaac Sim 5.1 and Isaac Lab 2.3.x:
+3. Avoid the conflicted shared Conda environment. Use the existing ROBOTIS Lab
+   Docker image, which isolates the capture and correctly pins its critical
+   NumPy, packaging, Torch, and TorchAudio versions. Six non-critical metadata
+   conflicts remain in the image, but none replace those simulator pins. The
+   project-owned launcher mounts ROBOTIS Lab source read-only and writes only to
+   this project's ignored export directory:
 
    ```bash
-   cd /home/mjcha/robotis_lab
-   ./docker/container.sh start
+   cd /home/mjcha/effector-aware-foundationpose
+   ./scripts/run_omy_isaac_capture_docker.sh
    ```
 
 4. Run an unchanged renderer gate in that clean environment before running any
    EA code. Success means the process reaches `app ready`, creates a camera
    render product, emits at least one RGB/depth frame, and exits with status 0.
-5. Mount or copy only the EA capture entry point into the running container and
-   write the export to the host project. Do not copy weights or datasets into
-   Git.
+5. Validate the host export after the container exits. Do not copy weights or
+   datasets into Git.
 
 The RTX 3070 has 8 GB VRAM, below NVIDIA's published 16 GB minimum for Isaac
 Sim 5.1. This short one-environment, 848 x 480 capture may still work—as the old
