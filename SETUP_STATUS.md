@@ -38,8 +38,11 @@ Last updated: 2026-09-11 (Asia/Seoul)
   excluded from Git
 - Recovered the established local GitHub identity from existing repository
   history and used it only for this repository
-- Created the initial local commit
+- Created four local milestone commits; the current `main` tip is `8351de3`
 - A GitHub remote has not been created or pushed
+
+A consolidated history and execution roadmap is maintained in
+`docs/PROJECT_SUMMARY.md`.
 
 The Codex sandbox does not expose `/dev/nvidia*`, the Docker socket, or the
 user's supplementary groups. The host gate was therefore rerun with host access
@@ -85,10 +88,15 @@ environment versions, and numerical validation.
 1. Create a private GitHub repository and push `main`. The GitHub CLI is not
    installed and no GitHub token is exposed. Existing local history strongly
    indicates the owner is `chlgkals07`.
-2. Move Isaac Sim/driver to a compatible renderer combination. The installed
+2. Move Isaac Sim/driver to a compatible renderer combination. The lowest-code-
+   migration path is Isaac Sim 5.1/Isaac Lab 2.3.2 with the documented tested
+   Linux driver 580.65.06. The longer-term alternative is a separate Isaac Sim
+   6.0.1/Isaac Lab 3.0 environment plus ROBOTIS Lab migration. The installed
    Isaac Sim 5.1.0.0 crashes in `librtx.scenedb.plugin.so` with driver 595.91.07,
    including when running the unchanged Isaac Lab camera tutorial. No system
-   packages or drivers were changed during this session.
+   packages or drivers were changed during this session. NVIDIA's published
+   Isaac Sim 5.1 minimum is an RTX 4080 with 16 GB VRAM, so this RTX 3070 with
+   8 GB remains an unsupported configuration even with the tested driver.
    The shared `env_isaaclab` also has pre-existing dependency conflicts; see
    `docs/ISAAC_INTEGRATION.md`.
 3. Run `scripts/run_omy_isaac_capture.sh`, validate the short export, then run

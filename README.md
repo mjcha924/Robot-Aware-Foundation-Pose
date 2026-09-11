@@ -45,6 +45,10 @@ place. Their verification state and the installed renderer compatibility
 blocker are recorded in
 [`docs/ISAAC_INTEGRATION.md`](docs/ISAAC_INTEGRATION.md).
 
+For a single consolidated record of completed work, Git checkpoints, blockers,
+and prioritized next steps, see
+[`docs/PROJECT_SUMMARY.md`](docs/PROJECT_SUMMARY.md).
+
 ## Clone
 
 ```bash
