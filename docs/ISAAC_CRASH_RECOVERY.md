@@ -4,16 +4,12 @@ Last verified: 2026-09-11 (Asia/Seoul)
 
 ## Execution status
 
-An `apt-get` simulation confirms that installing Ubuntu's current
-`nvidia-driver-580` package (580.178.04) will remove the 20 installed 595-series
-components and install the corresponding 580-series set. No compute workload is
-using the GPU. The actual transaction has not run because this automation
-session cannot provide the host account's sudo password; the currently loaded
-driver remains 595.91.07 until the install and reboot are completed.
+Recovery completed. Ubuntu's `nvidia-driver-580` package replaced the 595-series
+stack, and the host rebooted into kernel 6.8.0-138-generic with driver
+580.178.04. Native and containerized GPU checks pass.
 
-The isolated ROBOTIS image is already present locally, and
-`scripts/run_omy_isaac_capture_docker.sh` is ready for the first post-reboot
-capture attempt.
+The isolated ROBOTIS image completed the first post-reboot ten-frame capture,
+and FoundationPose processed it successfully. See `docs/ISAAC_CONTROL.md`.
 
 ## Diagnosis
 

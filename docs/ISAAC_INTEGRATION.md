@@ -61,22 +61,25 @@ mesh frame through `T_object_mesh` before composing robot transforms.
 
 The temporary YCB smoke export and all inference results are ignored by Git.
 
-## Current simulator blocker
+## Simulator blocker resolved
 
-The installed stack is Isaac Sim 5.1.0.0, Isaac Lab 2.3.2, driver 595.91.07,
-and an RTX 3070. The simulator detects the GPU, but both a minimal launch and
-Isaac Lab's unchanged `run_usd_camera.py --headless --enable_cameras` crash in
-`librtx.scenedb.plugin.so` before scene code runs. This reproduces a
+The original stack was Isaac Sim 5.1.0.0, Isaac Lab 2.3.2, driver 595.91.07,
+and an RTX 3070. Both a minimal launch and Isaac Lab's unchanged
+`run_usd_camera.py --headless --enable_cameras` crashed in
+`librtx.scenedb.plugin.so` before scene code ran. This reproduced a
 [reported Isaac Sim 5.1 failure on the 595 driver
 branch](https://github.com/isaac-sim/IsaacLab/issues/6785). NVIDIA's
 [current 5.1 documentation](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/installation/install_workstation.html)
 also marks that release unsupported in favor of newer versions.
 
-No driver, kernel, Isaac installation, or ROBOTIS Lab source was changed. The
-capture code is ready but cannot be runtime-validated until the renderer stack
-is moved to a compatible Isaac Sim/driver combination.
+The host was restored to driver 580.178.04 and rebooted into kernel
+6.8.0-138-generic. The loaded module, DKMS state, native `nvidia-smi`, and a CUDA
+container all agree on 580.178.04. The isolated ROBOTIS Lab container then
+initialized RTX, captured ten frames, and exited normally. FoundationPose also
+processed all ten frames. The former renderer blocker is closed.
 
 The existing `env_isaaclab` also has package-version conflicts reported by
 `pip check` (including Isaac Sim's `packaging==23.0`/`numpy==1.26.0` pins and a
 mismatched TorchAudio build). Those were left untouched because repairing the
 shared environment should be done together with the renderer-version decision.
+The validated path now avoids that environment entirely.

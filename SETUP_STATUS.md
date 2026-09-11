@@ -8,8 +8,8 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - Existing FoundationPose checkout: `third_party/FoundationPose`
 - Pinned upstream commit: `a1b694b83e633c2cb6115b9063d940a687759392`
 - Physical GPU: NVIDIA GeForce RTX 3070 (not the RTX 3060 initially assumed)
-- Ubuntu 22.04.5, kernel 6.8.0-111-generic
-- NVIDIA driver/DKMS 595.91.07 is installed and the kernel module is loaded
+- Ubuntu 22.04.5, running kernel 6.8.0-138-generic
+- NVIDIA driver/DKMS 580.178.04 is installed and loaded consistently
 - Docker 29.4.0 and NVIDIA Container Toolkit 1.19.0 are installed
 - System CUDA compiler (`nvcc`) is absent
 - About 281 GiB disk space and 31 GiB RAM were available
@@ -19,11 +19,11 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - The official FoundationPose image is pulled and tagged `foundationpose:latest`
 - The pinned checkout's native `mycpp` extension is built
 - The unchanged pretrained model-based demo passed on all 737 frames
-- The installed Isaac renderer was tested and is blocked by a native
-  Isaac Sim 5.1/driver-595 `librtx.scenedb.plugin.so` crash
-- A simulated Ubuntu driver transaction confirms `nvidia-driver-580` 580.178.04
-  will replace the installed 595.91.07 package set cleanly; the real transaction
-  is pending because non-interactive sudo requires the host account password
+- The native Isaac Sim 5.1/driver-595 `librtx.scenedb.plugin.so` crash was fixed
+  by restoring the host to the 580 driver branch
+- The isolated ROBOTIS Lab Isaac image captured and validated ten OMY frames
+- FoundationPose processed the ten-frame OMY capture successfully with mean
+  errors of 8.12 mm translation and 1.20 degrees rotation against Isaac truth
 
 ## Repository progress
 
@@ -37,6 +37,8 @@ Last updated: 2026-09-11 (Asia/Seoul)
   end-effector-relative poses
 - Passed an end-to-end three-frame contract smoke test with the pretrained
   FoundationPose models; all six offline unit tests pass
+- Passed the first real ten-frame Isaac/OMY control capture and FoundationPose
+  run; see `docs/ISAAC_CONTROL.md`
 - Downloaded weights, demo data, simulator exports, and generated outputs are
   excluded from Git
 - Recovered the established local GitHub identity from existing repository
@@ -46,6 +48,8 @@ Last updated: 2026-09-11 (Asia/Seoul)
   `https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`
 - The initial push is pending because no GitHub credential or SSH key is
   available on this host
+- Installed checksum-verified GitHub CLI 2.100.0 under `~/.local/bin`; `gh auth
+  login` is still required before pushing
 
 A consolidated history and execution roadmap is maintained in
 `docs/PROJECT_SUMMARY.md`.
@@ -93,29 +97,14 @@ environment versions, and numerical validation.
 
 ## Next actions
 
-1. Move Isaac Sim/driver to a compatible renderer combination. Local logs show
-   this host fully loaded Isaac Sim 5.1 with driver 580.126.09 in March 2026.
-   The lowest-code-migration path is therefore the 580 driver branch with Isaac
-   Sim 5.1/Isaac Lab 2.3.x, preferably using ROBOTIS Lab's pinned Docker image
-   through `scripts/run_omy_isaac_capture_docker.sh`.
-   The longer-term alternative is a separate Isaac Sim 6.0.1/Isaac Lab 3.0
-   environment plus ROBOTIS Lab migration. The installed
-   Isaac Sim 5.1.0.0 crashes in `librtx.scenedb.plugin.so` with driver 595.91.07,
-   including when running the unchanged Isaac Lab camera tutorial. No system
-   packages or drivers were changed during this session. NVIDIA's published
-   Isaac Sim 5.1 minimum is an RTX 4080 with 16 GB VRAM, so this RTX 3070 with
-   8 GB remains an unsupported configuration even with the tested driver.
-   The shared `env_isaaclab` also has pre-existing dependency conflicts; see
-   `docs/ISAAC_INTEGRATION.md`.
-2. Run `scripts/run_omy_isaac_capture_docker.sh`, validate the short export,
-   then run
-   `scripts/run_isaac_foundationpose.sh` and inspect the camera/robot overlay.
-3. Implement candidate pruning only after the real Isaac capture passes.
+1. Authenticate GitHub with `gh auth login`, then push `main` to the configured
+   `origin`.
+2. Freeze the passing ten-frame run as the static Isaac control and add a
+   longer dynamic/occlusion sequence for meaningful tracking evaluation.
+3. Define the candidate-pruning rule and metrics against both controls, then
+   implement the first end-effector-aware experiment.
 4. Preserve the upstream baseline as the control; place all new method code in
    this repository rather than modifying the FoundationPose submodule.
-5. Authenticate GitHub on this host and push `main` to the already configured
-   `origin`. The GitHub CLI is not installed and no HTTPS token or SSH key is
-   currently available.
 
 ## License warning
 

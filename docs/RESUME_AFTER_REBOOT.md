@@ -2,6 +2,11 @@
 
 Handoff saved: 2026-09-11 (Asia/Seoul)
 
+> **Completed:** This reboot handoff was successfully resumed. Driver
+> 580.178.04, Docker GPU access, Isaac capture, export validation, and the
+> ten-frame FoundationPose control all passed. Continue from
+> `docs/ISAAC_CONTROL.md` and `SETUP_STATUS.md`.
+
 ## Resume prompt
 
 Start the next Codex session with:

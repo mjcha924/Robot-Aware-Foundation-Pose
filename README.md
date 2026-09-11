@@ -55,6 +55,9 @@ The renderer crash diagnosis and recovery gates are documented in
 After the host driver is restored to the 580 branch, the preferred isolated
 OMY capture entry point is `scripts/run_omy_isaac_capture_docker.sh`.
 
+The first passing ten-frame Isaac/OMY control and its pose errors are recorded
+in [`docs/ISAAC_CONTROL.md`](docs/ISAAC_CONTROL.md).
+
 For the exact reboot boundary and continuation commands, see
 [`docs/RESUME_AFTER_REBOOT.md`](docs/RESUME_AFTER_REBOOT.md).
 
