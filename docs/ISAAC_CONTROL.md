@@ -38,6 +38,10 @@ First, middle, and last overlays were inspected and remained visually aligned
 with the bottle. All ten camera-relative and end-effector-relative output
 matrices were written successfully.
 
+A representative overlay and short side-by-side video are committed under
+`docs/assets/` so collaborators can inspect this project-generated Isaac result
+without downloading the ignored simulator export or inference output.
+
 Artifact hashes:
 
 ```text

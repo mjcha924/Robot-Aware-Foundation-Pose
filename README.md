@@ -17,6 +17,17 @@ The upstream FoundationPose source is pinned as a Git submodule under
 `third_party/FoundationPose`; downloaded assets and generated results are kept
 outside Git.
 
+## Isaac Sim result
+
+This is a project-generated OMY/green-tea-bottle frame rendered in Isaac Sim,
+then processed by the unchanged pretrained FoundationPose estimator. It is not
+an image from the upstream FoundationPose demo. The green box and colored axes
+show the estimated 6-DoF bottle pose.
+
+![FoundationPose tracking a bottle rendered in the project Isaac Sim scene](docs/assets/isaac_omy_foundationpose.png)
+
+[Watch the short side-by-side Isaac RGB and FoundationPose overlay](docs/assets/isaac_omy_foundationpose_control.mp4).
+
 ## Repository layout
 
 - `configs/`: experiment and runtime configuration
