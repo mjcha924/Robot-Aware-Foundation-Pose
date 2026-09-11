@@ -49,6 +49,9 @@ For a single consolidated record of completed work, Git checkpoints, blockers,
 and prioritized next steps, see
 [`docs/PROJECT_SUMMARY.md`](docs/PROJECT_SUMMARY.md).
 
+The renderer crash diagnosis and recovery gates are documented in
+[`docs/ISAAC_CRASH_RECOVERY.md`](docs/ISAAC_CRASH_RECOVERY.md).
+
 ## Clone
 
 ```bash

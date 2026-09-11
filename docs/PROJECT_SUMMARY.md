@@ -60,7 +60,7 @@ The intended first EA feature is end-effector-aware pose-candidate pruning.
 
 ## Git state
 
-The local `main` history is:
+The functional milestones preceding the handoff-only documentation commits are:
 
 ```text
 8351de3 feat: add OMY Isaac capture adapter
@@ -69,8 +69,9 @@ ee6bd24 feat: define Isaac export contract
 299de39 chore: initialize EA-FoundationPose workspace
 ```
 
-The worktree and submodule are clean. There is no remote because GitHub CLI
-credentials or a GitHub token are not available in the environment.
+The worktree and submodule are clean. `origin` is configured as
+`https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`. The initial
+push is pending because the host has no GitHub CLI, HTTPS token, or SSH key.
 
 ## Current blocker
 
@@ -84,15 +85,21 @@ so even a driver-compatible 5.1 setup would remain outside NVIDIA's supported
 hardware envelope. The shared Isaac environment also has pre-existing
 dependency conflicts reported by `pip check`.
 
+Historical local logs provide a direct recovery lead: the same Isaac Sim 5.1
+installation reached `app ready` and `Isaac Sim Full App is loaded` under driver
+580.126.09 in March 2026. See `docs/ISAAC_CRASH_RECOVERY.md` for the evidence,
+recovery procedure, and acceptance gates.
+
 No driver, kernel, simulator package, or shared-environment dependency was
 changed during this work.
 
 ## Next steps
 
-1. Restore a supported simulator path. The lowest-migration option is to test
-   Isaac Sim 5.1/Isaac Lab 2.3.2 with its validated 580.65.06 Linux driver. A
-   separate Isaac Sim 6.0.1/Isaac Lab 3.0 environment is the longer-term option
-   but requires checking and likely migrating ROBOTIS Lab APIs.
+1. Restore the previously working renderer family: move the host from driver
+   595.91.07 back to the 580 branch, then use ROBOTIS Lab's pinned Isaac Sim
+   5.1/Isaac Lab 2.3.x Docker stack. A separate Isaac Sim 6.0.1/Isaac Lab 3.0
+   environment is the longer-term option but requires checking and likely
+   migrating ROBOTIS Lab APIs.
 2. Re-run the unchanged Isaac Lab camera tutorial as the renderer gate.
 3. Run `scripts/run_omy_isaac_capture.sh`, then validate the generated sequence
    with `scripts/validate_isaac_export.py`.
@@ -100,5 +107,5 @@ changed during this work.
    mesh, camera, object, and end-effector overlays.
 5. Freeze that run as the Isaac control, define quantitative pose/occlusion
    metrics, and only then implement end-effector-aware candidate pruning.
-6. Create a private GitHub repository, add the collaborator, and push `main`
-   when credentials are available. Do not push weights, datasets, or outputs.
+6. Authenticate GitHub and push `main` to the configured `origin`. Do not push
+   weights, datasets, or outputs.

@@ -38,8 +38,11 @@ Last updated: 2026-09-11 (Asia/Seoul)
   excluded from Git
 - Recovered the established local GitHub identity from existing repository
   history and used it only for this repository
-- Created four local milestone commits; the current `main` tip is `8351de3`
-- A GitHub remote has not been created or pushed
+- Maintains a documented local milestone history on `main`
+- Configured `origin` as
+  `https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`
+- The initial push is pending because no GitHub credential or SSH key is
+  available on this host
 
 A consolidated history and execution roadmap is maintained in
 `docs/PROJECT_SUMMARY.md`.
@@ -85,13 +88,12 @@ environment versions, and numerical validation.
 
 ## Next actions
 
-1. Create a private GitHub repository and push `main`. The GitHub CLI is not
-   installed and no GitHub token is exposed. Existing local history strongly
-   indicates the owner is `chlgkals07`.
-2. Move Isaac Sim/driver to a compatible renderer combination. The lowest-code-
-   migration path is Isaac Sim 5.1/Isaac Lab 2.3.2 with the documented tested
-   Linux driver 580.65.06. The longer-term alternative is a separate Isaac Sim
-   6.0.1/Isaac Lab 3.0 environment plus ROBOTIS Lab migration. The installed
+1. Move Isaac Sim/driver to a compatible renderer combination. Local logs show
+   this host fully loaded Isaac Sim 5.1 with driver 580.126.09 in March 2026.
+   The lowest-code-migration path is therefore the 580 driver branch with Isaac
+   Sim 5.1/Isaac Lab 2.3.x, preferably using ROBOTIS Lab's pinned Docker image.
+   The longer-term alternative is a separate Isaac Sim 6.0.1/Isaac Lab 3.0
+   environment plus ROBOTIS Lab migration. The installed
    Isaac Sim 5.1.0.0 crashes in `librtx.scenedb.plugin.so` with driver 595.91.07,
    including when running the unchanged Isaac Lab camera tutorial. No system
    packages or drivers were changed during this session. NVIDIA's published
@@ -99,11 +101,14 @@ environment versions, and numerical validation.
    8 GB remains an unsupported configuration even with the tested driver.
    The shared `env_isaaclab` also has pre-existing dependency conflicts; see
    `docs/ISAAC_INTEGRATION.md`.
-3. Run `scripts/run_omy_isaac_capture.sh`, validate the short export, then run
+2. Run `scripts/run_omy_isaac_capture.sh`, validate the short export, then run
    `scripts/run_isaac_foundationpose.sh` and inspect the camera/robot overlay.
-4. Implement candidate pruning only after the real Isaac capture passes.
-5. Preserve the upstream baseline as the control; place all new method code in
+3. Implement candidate pruning only after the real Isaac capture passes.
+4. Preserve the upstream baseline as the control; place all new method code in
    this repository rather than modifying the FoundationPose submodule.
+5. Authenticate GitHub on this host and push `main` to the already configured
+   `origin`. The GitHub CLI is not installed and no HTTPS token or SSH key is
+   currently available.
 
 ## License warning
 
