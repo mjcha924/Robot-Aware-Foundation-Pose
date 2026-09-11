@@ -79,6 +79,10 @@ T_effector_object = inverse(T_world_effector)
 ground truth and evaluation. It must be identity when the exported OBJ is
 already expressed in that frame.
 
+The schema also permits optional producer metadata: a camera name, mesh source
+and triangle/vertex counts, and a top-level `source` object. Consumers must not
+derive geometry or coordinate conventions from those provenance fields.
+
 ## Validation
 
 Validate an export before running FoundationPose:

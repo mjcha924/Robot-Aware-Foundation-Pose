@@ -47,6 +47,7 @@
       "additionalProperties": false,
       "required": ["model", "convention", "K"],
       "properties": {
+        "name": { "type": "string", "minLength": 1 },
         "model": { "const": "pinhole" },
         "convention": { "const": "opencv_x_right_y_down_z_forward" },
         "K": { "$ref": "#/$defs/matrix3" }
@@ -59,7 +60,10 @@
       "properties": {
         "path": { "type": "string", "minLength": 1 },
         "units": { "const": "meter" },
-        "T_object_mesh": { "$ref": "#/$defs/matrix4" }
+        "T_object_mesh": { "$ref": "#/$defs/matrix4" },
+        "source": { "type": "string", "minLength": 1 },
+        "vertex_count": { "type": "integer", "minimum": 1 },
+        "triangle_count": { "type": "integer", "minimum": 1 }
       }
     },
     "segmentation": {
@@ -70,6 +74,11 @@
         "object_id": { "type": "integer", "minimum": 0 },
         "initial_mask_only": { "type": "boolean" }
       }
+    },
+    "source": {
+      "type": "object",
+      "description": "Optional capture provenance; keys are producer-specific.",
+      "additionalProperties": true
     }
   },
   "$defs": {

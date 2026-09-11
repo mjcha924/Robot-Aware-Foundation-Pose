@@ -1,6 +1,6 @@
 # EA-FoundationPose setup status
 
-Last updated: 2026-09-10 (Asia/Seoul)
+Last updated: 2026-09-11 (Asia/Seoul)
 
 ## Current checkpoint
 
@@ -15,11 +15,12 @@ Last updated: 2026-09-10 (Asia/Seoul)
 - About 281 GiB disk space and 31 GiB RAM were available
 - Both required FoundationPose checkpoint sets are downloaded and verified
 - The 737-frame `mustard0` RGB-D demo and textured mesh are installed locally
-- No EA-FoundationPose method code implemented
+- No end-effector-aware candidate-pruning method implemented
 - The official FoundationPose image is pulled and tagged `foundationpose:latest`
 - The pinned checkout's native `mycpp` extension is built
 - The unchanged pretrained model-based demo passed on all 737 frames
-- No simulation or training job has been started
+- The installed Isaac renderer was tested and is blocked by a native
+  Isaac Sim 5.1/driver-595 `librtx.scenedb.plugin.so` crash
 
 ## Repository progress
 
@@ -28,6 +29,11 @@ Last updated: 2026-09-10 (Asia/Seoul)
 - Added the minimal README, directory scaffold, and artifact exclusions
 - Defined the versioned Isaac export contract and added a dependency-free
   validator with passing unit tests
+- Added an OMY bottle capture entry point using the existing ROBOTIS Lab task
+- Added a contract-to-FoundationPose runner that emits camera- and
+  end-effector-relative poses
+- Passed an end-to-end three-frame contract smoke test with the pretrained
+  FoundationPose models; all six offline unit tests pass
 - Downloaded weights, demo data, simulator exports, and generated outputs are
   excluded from Git
 - Recovered the established local GitHub identity from existing repository
@@ -79,11 +85,16 @@ environment versions, and numerical validation.
 1. Create a private GitHub repository and push `main`. The GitHub CLI is not
    installed and no GitHub token is exposed. Existing local history strongly
    indicates the owner is `chlgkals07`.
-2. Export one short static-object sequence using the contract in
-   `docs/ISAAC_EXPORT_CONTRACT.md` and run `scripts/validate_isaac_export.py`.
-3. Validate its camera/URDF overlay
-   before implementing end-effector-aware candidate pruning.
-4. Preserve the upstream baseline as the control; place all new method code in
+2. Move Isaac Sim/driver to a compatible renderer combination. The installed
+   Isaac Sim 5.1.0.0 crashes in `librtx.scenedb.plugin.so` with driver 595.91.07,
+   including when running the unchanged Isaac Lab camera tutorial. No system
+   packages or drivers were changed during this session.
+   The shared `env_isaaclab` also has pre-existing dependency conflicts; see
+   `docs/ISAAC_INTEGRATION.md`.
+3. Run `scripts/run_omy_isaac_capture.sh`, validate the short export, then run
+   `scripts/run_isaac_foundationpose.sh` and inspect the camera/robot overlay.
+4. Implement candidate pruning only after the real Isaac capture passes.
+5. Preserve the upstream baseline as the control; place all new method code in
    this repository rather than modifying the FoundationPose submodule.
 
 ## License warning

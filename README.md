@@ -40,6 +40,11 @@ capture before inference with:
 python3 scripts/validate_isaac_export.py data/isaac_exports/<sequence>
 ```
 
+The OMY bottle capture and contract-to-FoundationPose entry points are now in
+place. Their verification state and the installed renderer compatibility
+blocker are recorded in
+[`docs/ISAAC_INTEGRATION.md`](docs/ISAAC_INTEGRATION.md).
+
 ## Clone
 
 ```bash
