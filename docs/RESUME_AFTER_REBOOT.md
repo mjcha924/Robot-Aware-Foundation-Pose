@@ -23,14 +23,14 @@ Start the next Codex session with:
 - FoundationPose submodule: `a1b694b83e633c2cb6115b9063d940a687759392`
 - Remote: `https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`
 - Worktree was clean before adding this handoff.
-- The remote has not received the commits because no GitHub HTTPS token or SSH
-  key is available to the automation session.
+- The project history was subsequently integrated with the remote placeholder
+  commit and pushed to GitHub at merge commit `774c34f`.
 
 ## Reboot boundary
 
-At handoff time, the loaded NVIDIA driver is still 595.91.07. It crashes Isaac
-Sim 5.1 in `librtx.scenedb.plugin.so`. The requested installation was simulated
-successfully but could not run because the host requires its sudo password.
+At handoff time, the loaded NVIDIA driver was still 595.91.07 and crashed Isaac
+Sim 5.1 in `librtx.scenedb.plugin.so`. The host was subsequently changed to
+580.178.04 and rebooted successfully; the checks and captures below all passed.
 
 The user must run this in a local terminal before rebooting:
 
@@ -101,8 +101,8 @@ GPU workloads during capture.
 
 ## GitHub continuation
 
-GitHub authentication must be established privately on the host. Never place a
-token in this document or in a remote URL. Once authentication is available:
+GitHub authentication was established privately on the host. Never place a
+token in this document or in a remote URL. Future updates can use:
 
 ```bash
 cd /home/mjcha/effector-aware-foundationpose

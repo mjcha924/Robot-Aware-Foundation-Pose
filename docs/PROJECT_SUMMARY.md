@@ -61,6 +61,12 @@ The intended first EA feature is end-effector-aware pose-candidate pruning.
 - Against Isaac ground truth, that control achieved 8.12 mm mean translation
   error and 1.20 degree mean rotation error. Representative overlays remained
   aligned; see `docs/ISAAC_CONTROL.md`.
+- Added a dependency-free pose evaluator that reports per-frame and aggregate
+  translation/rotation error in camera and end-effector coordinates. It
+  reproduces the recorded control values; all 12 unit tests pass.
+- Drafted an opt-in smooth end-effector sweep for the next occlusion capture.
+  Its initial simulator run was stopped before completion, so the mode is not
+  yet validated and no dynamic result is claimed.
 - Downloaded data and generated outputs remain ignored by Git.
 
 ## Git state
@@ -75,8 +81,9 @@ ee6bd24 feat: define Isaac export contract
 ```
 
 The worktree and submodule are clean. `origin` is configured as
-`https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`. The initial
-push is pending because the host has no GitHub CLI, HTTPS token, or SSH key.
+`https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`. The remote's
+initial placeholder history was integrated without discarding either history,
+and `main` was pushed at merge commit `774c34f`.
 
 ## Current blocker
 
@@ -97,11 +104,9 @@ No shared-environment dependency or ROBOTIS Lab source was changed.
 
 ## Next steps
 
-1. Authenticate GitHub and push `main` to the configured `origin`. Do not push
-   weights, datasets, or outputs.
-2. Freeze the ten-frame run as the static Isaac control and capture a longer
+1. Freeze the ten-frame run as the static Isaac control and capture a longer
    motion/occlusion sequence.
-3. Define quantitative pose, occlusion, candidate-count, runtime, and recovery
+2. Define quantitative pose, occlusion, candidate-count, runtime, and recovery
    metrics.
-4. Implement and ablate end-effector-aware candidate pruning without changing
+3. Implement and ablate end-effector-aware candidate pruning without changing
    the pinned upstream FoundationPose submodule.

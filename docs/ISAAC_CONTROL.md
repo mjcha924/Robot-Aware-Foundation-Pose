@@ -56,6 +56,7 @@ python3 scripts/validate_isaac_export.py data/isaac_exports/omy_bottle_short
   --output /workspace/outputs/omy_bottle_short \
   --save-vis \
   --overwrite
+python3 scripts/evaluate_pose_results.py outputs/omy_bottle_short/poses.jsonl
 ```
 
 ## Limitation and next experiment

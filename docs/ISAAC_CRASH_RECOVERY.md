@@ -103,8 +103,8 @@ Run these in order and stop at the first failure:
 Isaac Lab 3.0 beta 2 patch 1 supports Isaac Sim 6.0.1. Isaac Sim 6.0.1 was
 tested with Linux driver 595.58.03, but the same RTX 4080/16 GB minimum applies.
 Moving to this stack should be done in a separate Python 3.12 environment and
-requires migrating ROBOTIS Lab 2.x APIs; it is not the quickest path to the
-pending ten-frame control capture.
+requires migrating ROBOTIS Lab 2.x APIs; it was not needed for the completed
+ten-frame control capture.
 
 - <https://github.com/isaac-sim/IsaacLab/releases/tag/v3.0.0-beta2.patch1>
 - <https://docs.isaacsim.omniverse.nvidia.com/6.0.1/installation/requirements.html>

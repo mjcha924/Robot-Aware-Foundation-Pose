@@ -24,6 +24,8 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - The isolated ROBOTIS Lab Isaac image captured and validated ten OMY frames
 - FoundationPose processed the ten-frame OMY capture successfully with mean
   errors of 8.12 mm translation and 1.20 degrees rotation against Isaac truth
+- A dependency-free pose evaluator reproduces those control metrics in both
+  camera and end-effector coordinates; all 12 offline unit tests pass
 
 ## Repository progress
 
@@ -36,7 +38,7 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - Added a contract-to-FoundationPose runner that emits camera- and
   end-effector-relative poses
 - Passed an end-to-end three-frame contract smoke test with the pretrained
-  FoundationPose models; all six offline unit tests pass
+  FoundationPose models
 - Passed the first real ten-frame Isaac/OMY control capture and FoundationPose
   run; see `docs/ISAAC_CONTROL.md`
 - Downloaded weights, demo data, simulator exports, and generated outputs are
@@ -46,10 +48,9 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - Maintains a documented local milestone history on `main`
 - Configured `origin` as
   `https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`
-- The initial push is pending because no GitHub credential or SSH key is
-  available on this host
-- Installed checksum-verified GitHub CLI 2.100.0 under `~/.local/bin`; `gh auth
-  login` is still required before pushing
+- Installed checksum-verified GitHub CLI 2.100.0 under `~/.local/bin`
+- Integrated the GitHub repository's initial history and pushed `main`; local
+  and remote both reached merge commit `774c34f`
 
 A consolidated history and execution roadmap is maintained in
 `docs/PROJECT_SUMMARY.md`.
@@ -97,13 +98,14 @@ environment versions, and numerical validation.
 
 ## Next actions
 
-1. Authenticate GitHub with `gh auth login`, then push `main` to the configured
-   `origin`.
-2. Freeze the passing ten-frame run as the static Isaac control and add a
+1. Freeze the passing ten-frame run as the static Isaac control and add a
    longer dynamic/occlusion sequence for meaningful tracking evaluation.
-3. Define the candidate-pruning rule and metrics against both controls, then
+   An experimental `--motion effector-sweep` capture mode is drafted and
+   compiles, but its first simulator run was deliberately stopped before
+   validation and must not yet be treated as a result.
+2. Define the candidate-pruning rule and metrics against both controls, then
    implement the first end-effector-aware experiment.
-4. Preserve the upstream baseline as the control; place all new method code in
+3. Preserve the upstream baseline as the control; place all new method code in
    this repository rather than modifying the FoundationPose submodule.
 
 ## License warning

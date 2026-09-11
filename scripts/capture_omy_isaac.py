@@ -24,6 +24,24 @@ parser.add_argument("--frames", type=int, default=10)
 parser.add_argument("--warmup-steps", type=int, default=12)
 parser.add_argument("--stride", type=int, default=2, help="Environment steps between exported frames.")
 parser.add_argument("--seed", type=int, default=42)
+parser.add_argument(
+    "--motion",
+    choices=("static", "effector-sweep"),
+    default="static",
+    help="Keep the reset pose or sweep the end effector above the bottle to induce occlusion.",
+)
+parser.add_argument(
+    "--sweep-clearance-m",
+    type=float,
+    default=0.16,
+    help="Effector height above the bottle origin during an effector sweep.",
+)
+parser.add_argument(
+    "--sweep-span-m",
+    type=float,
+    default=0.16,
+    help="Total lateral travel centered over the bottle during an effector sweep.",
+)
 parser.add_argument("--overwrite", action="store_true")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -49,7 +67,7 @@ from pxr import Usd, UsdGeom  # noqa: E402
 import robotis_lab  # noqa: E402,F401
 from isaaclab.envs import ManagerBasedRLEnv  # noqa: E402
 from isaaclab_tasks.utils import parse_env_cfg  # noqa: E402
-from isaaclab.utils.math import matrix_from_quat  # noqa: E402
+from isaaclab.utils.math import matrix_from_quat, subtract_frame_transforms  # noqa: E402
 
 
 TASK = "RobotisLab-Real-Pick-Place-Bottle-OMY-v0"
@@ -121,14 +139,49 @@ def write_obj_from_stage(path: Path, rigid_root_path: str) -> tuple[int, int]:
     return len(vertices), len(triangles)
 
 
+def smoothstep(value: float) -> float:
+    value = max(0.0, min(1.0, value))
+    return value * value * (3.0 - 2.0 * value)
+
+
+def sweep_position(
+    progress: float,
+    home: torch.Tensor,
+    bottle: torch.Tensor,
+    clearance_m: float,
+    span_m: float,
+) -> torch.Tensor:
+    """Generate a smooth home-to-bottle-to-home occlusion trajectory."""
+
+    start = bottle.clone()
+    start[1] -= span_m * 0.5
+    start[2] += clearance_m
+    end = start.clone()
+    end[1] += span_m
+    if progress < 0.15:
+        return home
+    if progress < 0.40:
+        blend = smoothstep((progress - 0.15) / 0.25)
+        return home + (start - home) * blend
+    if progress < 0.70:
+        blend = smoothstep((progress - 0.40) / 0.30)
+        return start + (end - start) * blend
+    if progress < 0.90:
+        blend = smoothstep((progress - 0.70) / 0.20)
+        return end + (home - end) * blend
+    return home
+
+
 def main() -> int:
     if args_cli.frames < 1 or args_cli.warmup_steps < 0 or args_cli.stride < 1:
         parser.error("--frames and --stride must be positive; --warmup-steps must be non-negative")
+    if args_cli.sweep_clearance_m <= 0.0 or args_cli.sweep_span_m <= 0.0:
+        parser.error("--sweep-clearance-m and --sweep-span-m must be positive")
     output = args_cli.output.resolve()
     prepare_output(output, args_cli.overwrite)
 
     env_cfg = parse_env_cfg(TASK, device=args_cli.device, num_envs=1)
-    env_cfg.init_action_cfg("record")
+    env_cfg.init_action_cfg("mimic_ik" if args_cli.motion == "effector-sweep" else "record")
     env_cfg.seed = args_cli.seed
     env_cfg.scene.num_envs = 1
     env_cfg.scene.replicate_physics = False
@@ -150,12 +203,50 @@ def main() -> int:
     env: ManagerBasedRLEnv = gym.make(TASK, cfg=env_cfg).unwrapped
     env.reset()
     try:
-        # The task's record action is [joint1..joint6, rh_r1_joint]. Holding
-        # the reset pose produces a stable, deterministic sensor smoke capture.
         robot = env.scene["robot"]
         joint_index = {name: index for index, name in enumerate(robot.data.joint_names)}
-        action_names = [f"joint{index}" for index in range(1, 7)] + ["rh_r1_joint"]
-        action = torch.stack([robot.data.joint_pos[:, joint_index[name]] for name in action_names], dim=1)
+        gripper = robot.data.joint_pos[:, joint_index["rh_r1_joint"] : joint_index["rh_r1_joint"] + 1].clone()
+        if args_cli.motion == "static":
+            # The task's record action is [joint1..joint6, rh_r1_joint].
+            # Holding the reset pose produces the deterministic smoke control.
+            action_names = [f"joint{index}" for index in range(1, 7)] + ["rh_r1_joint"]
+            static_action = torch.stack([robot.data.joint_pos[:, joint_index[name]] for name in action_names], dim=1)
+
+            def action_at(_progress: float) -> torch.Tensor:
+                return static_action
+
+        else:
+            ee_data = env.scene["ee_frame"].data
+            bottle_data = env.scene["bottle"].data
+            home_position, home_quaternion = subtract_frame_transforms(
+                robot.data.root_pos_w,
+                robot.data.root_quat_w,
+                ee_data.target_pos_w[:, 0],
+                ee_data.target_quat_w[:, 0],
+            )
+            bottle_position, _ = subtract_frame_transforms(
+                robot.data.root_pos_w,
+                robot.data.root_quat_w,
+                bottle_data.root_pos_w,
+                bottle_data.root_quat_w,
+            )
+            print(
+                "Effector sweep: "
+                f"home={home_position[0].tolist()}, bottle={bottle_position[0].tolist()}, "
+                f"clearance={args_cli.sweep_clearance_m:.3f} m, span={args_cli.sweep_span_m:.3f} m"
+            )
+
+            def action_at(progress: float) -> torch.Tensor:
+                position = sweep_position(
+                    progress,
+                    home_position[0],
+                    bottle_position[0],
+                    args_cli.sweep_clearance_m,
+                    args_cli.sweep_span_m,
+                ).unsqueeze(0)
+                return torch.cat((position, home_quaternion, gripper), dim=1)
+
+        action = action_at(0.0)
         if action.shape[1] != env.action_manager.total_action_dim:
             raise RuntimeError(
                 f"OMY action dimension changed: assembled {action.shape[1]}, manager expects {env.action_manager.total_action_dim}"
@@ -167,9 +258,11 @@ def main() -> int:
         camera = env.scene[camera_name]
         intrinsic = camera.data.intrinsic_matrices[0].detach().cpu().numpy()
         frames: list[dict] = []
+        motion_steps = max(1, args_cli.frames * args_cli.stride - 1)
         for frame_index in range(args_cli.frames):
-            for _ in range(args_cli.stride):
-                env.step(action)
+            for stride_index in range(args_cli.stride):
+                motion_step = frame_index * args_cli.stride + stride_index
+                env.step(action_at(motion_step / motion_steps))
             frame_id = f"{frame_index:06d}"
             rgb = camera.data.output["rgb"][0].detach().cpu().numpy()
             depth_m = camera.data.output["distance_to_image_plane"][0, ..., 0].detach().cpu().numpy()
@@ -240,6 +333,9 @@ def main() -> int:
                 "robotis_lab_commit": "e32b122d192c2db7fe52cfd3ece74c07f6a418a6",
                 "seed": args_cli.seed,
                 "end_effector": "OMY/link6 offset [0, -0.248, 0]",
+                "motion": args_cli.motion,
+                "sweep_clearance_m": args_cli.sweep_clearance_m if args_cli.motion == "effector-sweep" else None,
+                "sweep_span_m": args_cli.sweep_span_m if args_cli.motion == "effector-sweep" else None,
             },
         }
         (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

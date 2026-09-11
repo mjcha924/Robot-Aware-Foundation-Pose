@@ -41,9 +41,15 @@ python3 scripts/validate_isaac_export.py data/isaac_exports/<sequence>
 ```
 
 The OMY bottle capture and contract-to-FoundationPose entry points are now in
-place. Their verification state and the installed renderer compatibility
-blocker are recorded in
+place. Their verification state and the resolved renderer compatibility issue
+are recorded in
 [`docs/ISAAC_INTEGRATION.md`](docs/ISAAC_INTEGRATION.md).
+
+Evaluate a simulated run against its embedded ground truth with:
+
+```bash
+python3 scripts/evaluate_pose_results.py outputs/<run>/poses.jsonl
+```
 
 For a single consolidated record of completed work, Git checkpoints, blockers,
 and prioritized next steps, see
