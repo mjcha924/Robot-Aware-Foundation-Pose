@@ -49,13 +49,15 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - Configured `origin` as
   `https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`
 - Installed checksum-verified GitHub CLI 2.100.0 under `~/.local/bin`
-- Integrated the GitHub repository's initial history and pushed `main`; local
-  and remote both reached merge commit `774c34f`
+- Integrated the GitHub repository's initial history and continued pushing
+  project milestones; local and remote reached `7ced941` before the final
+  resume-handoff update
 
 A consolidated history and execution roadmap is maintained in
 `docs/PROJECT_SUMMARY.md`.
 
-The authoritative reboot handoff is `docs/RESUME_AFTER_REBOOT.md`.
+The authoritative current-session handoff is `docs/RESUME.md`.
+`docs/RESUME_AFTER_REBOOT.md` is retained as historical crash-recovery context.
 
 The Codex sandbox does not expose `/dev/nvidia*`, the Docker socket, or the
 user's supplementary groups. The host gate was therefore rerun with host access
