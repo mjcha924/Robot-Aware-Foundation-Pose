@@ -50,6 +50,8 @@ Last updated: 2026-09-11 (Asia/Seoul)
 A consolidated history and execution roadmap is maintained in
 `docs/PROJECT_SUMMARY.md`.
 
+The authoritative reboot handoff is `docs/RESUME_AFTER_REBOOT.md`.
+
 The Codex sandbox does not expose `/dev/nvidia*`, the Docker socket, or the
 user's supplementary groups. The host gate was therefore rerun with host access
 and passed on 2026-09-10.
