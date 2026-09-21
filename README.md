@@ -1,9 +1,8 @@
 # Effector-Aware FoundationPose
 
 Research workspace for adding robot end-effector context to
-[FoundationPose](https://github.com/NVlabs/FoundationPose). The first milestone
-is deliberately smaller: reproduce the unchanged pretrained, model-based
-FoundationPose demo before implementing or evaluating any method changes.
+[FoundationPose](https://github.com/NVlabs/FoundationPose). The unchanged
+pretrained pipeline is preserved as the control for evaluating method changes.
 
 ## Current state
 
@@ -27,6 +26,14 @@ show the estimated 6-DoF bottle pose.
 ![FoundationPose tracking a bottle rendered in the project Isaac Sim scene](docs/assets/isaac_omy_foundationpose.png)
 
 [Watch the short side-by-side Isaac RGB and FoundationPose overlay](docs/assets/isaac_omy_foundationpose_control.mp4).
+
+The **192-frame dynamic control** now includes six completely hidden bottle
+frames. Mean translation error rises from 8.2 mm with at least half the
+reference visible area to 41.2 mm below that level, peaking at 106.4 mm.
+The robot trajectory, synchronized export, and full inference run are validated;
+effector-aware candidate pruning is the next experiment, not yet implemented.
+See [`docs/ISAAC_DYNAMIC_CONTROL.md`](docs/ISAAC_DYNAMIC_CONTROL.md) for the
+results plot, capture fixes, metrics and reproduction commands.
 
 ## Repository layout
 

@@ -118,6 +118,16 @@ class ValidateIsaacExportTest(unittest.TestCase):
         errors = VALIDATOR.validate_sequence(self.root)
         self.assertTrue(any("depth 000001" in error and "bit depth" in error for error in errors))
 
+    def test_rejects_reset_or_duplicate_timestamps(self) -> None:
+        frames_path = self.root / "frames.jsonl"
+        frames = [json.loads(line) for line in frames_path.read_text(encoding="utf-8").splitlines()]
+        for timestamp in (0.02, 0.01):
+            frames[0]["timestamp_s"] = 0.02
+            frames[1]["timestamp_s"] = timestamp
+            frames_path.write_text("".join(json.dumps(frame) + "\n" for frame in frames), encoding="utf-8")
+            errors = VALIDATOR.validate_sequence(self.root)
+            self.assertTrue(any("strictly increasing" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

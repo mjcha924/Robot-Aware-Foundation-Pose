@@ -61,10 +61,27 @@ pose as `T_world_camera` without the axis conversion.
 Each line of `frames.jsonl` contains:
 
 - `frame_id`: filename stem shared by RGB, depth, and mask.
-- `timestamp_s`: simulation time in seconds.
+- `timestamp_s`: simulation time in seconds, strictly increasing across the sequence.
 - `T_world_camera`: camera frame to world frame.
 - `T_world_effector`: end-effector control frame to world frame.
 - `T_world_object_gt`: optional simulation-only object ground truth.
+
+Optional capture diagnostics are `visible_mask_pixels` (non-negative integer),
+`motion_progress` (trajectory progress from 0 to 1), and
+`effector_command_error_m` (distance between commanded and measured tool
+positions). Visible mask area is not an amodal occlusion fraction: object
+motion also changes the projected area. Later masks may be empty during full
+occlusion; registration still requires a non-empty first mask.
+
+The OMY exporter renders on the final physics substep of each environment
+step and rejects environment resets during capture. A valid file layout alone
+does not prove that the robot followed its commanded trajectory. Audit the
+exported motion and visibility with:
+
+```bash
+python3 scripts/analyze_isaac_sequence.py data/isaac_exports/<sequence> \
+  --poses outputs/<run>/poses.jsonl --json-out outputs/<run>/sequence_metrics.json
+```
 
 FoundationPose returns `T_camera_object`. The end-effector-relative object pose
 used by later EA logic is therefore:

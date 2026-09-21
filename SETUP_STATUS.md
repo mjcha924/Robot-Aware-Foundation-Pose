@@ -1,6 +1,6 @@
 # EA-FoundationPose setup status
 
-Last updated: 2026-09-11 (Asia/Seoul)
+Last updated: 2026-09-21 (Asia/Seoul)
 
 ## Current checkpoint
 
@@ -25,7 +25,13 @@ Last updated: 2026-09-11 (Asia/Seoul)
 - FoundationPose processed the ten-frame OMY capture successfully with mean
   errors of 8.12 mm translation and 1.20 degrees rotation against Isaac truth
 - A dependency-free pose evaluator reproduces those control metrics in both
-  camera and end-effector coordinates; all 12 offline unit tests pass
+  camera and end-effector coordinates; all 19 offline unit tests pass
+- A 192-frame dynamic OMY control now passes motion and export validation,
+  with six fully occluded frames. FoundationPose completes all frames: mean
+  errors 12.347 mm / 4.343 degrees; maximum 106.435 mm / 34.207 degrees.
+- Corrected the simulator COM/link-origin Jacobian mismatch, tool offsets,
+  capture synchronization, camera/recorder overhead, and hidden failure exits.
+  See `docs/ISAAC_DYNAMIC_CONTROL.md` for the verified diagnosis and results.
 
 ## Repository progress
 
@@ -100,13 +106,13 @@ environment versions, and numerical validation.
 
 ## Next actions
 
-1. Freeze the passing ten-frame run as the static Isaac control and add a
-   longer dynamic/occlusion sequence for meaningful tracking evaluation.
-   An experimental `--motion effector-sweep` capture mode is drafted and
-   compiles, but its first simulator run was deliberately stopped before
-   validation and must not yet be treated as a result.
-2. Define the candidate-pruning rule and metrics against both controls, then
-   implement the first end-effector-aware experiment.
+1. Preserve both the ten-frame static control and the accepted 192-frame
+   `omy_sweep_retrace_20260921` dynamic control. Other September 21 sweeps are
+   diagnostic attempts; see the dynamic-control record before using them.
+2. Define and implement candidate pruning for registration/recovery, where
+   the 252-candidate search actually occurs. Normal tracking uses one pose.
+   The current gripper is an occluder, not a rigid grasp: do not assume a
+   fixed object-to-effector transform or use object ground truth as a prior.
 3. Preserve the upstream baseline as the control; place all new method code in
    this repository rather than modifying the FoundationPose submodule.
 

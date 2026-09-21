@@ -210,6 +210,7 @@ def validate_sequence(root: Path) -> list[str]:
 
     frames: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
+    previous_timestamp: float | None = None
     with (root / frames_relative).open("r", encoding="utf-8") as stream:
         for line_number, line in enumerate(stream, start=1):
             try:
@@ -229,6 +230,10 @@ def validate_sequence(root: Path) -> list[str]:
             seen_ids.add(frame_id)
             if not is_number(frame.get("timestamp_s")) or frame["timestamp_s"] < 0:
                 errors.append(f"frames.jsonl:{line_number}: timestamp_s must be finite and non-negative")
+            else:
+                if previous_timestamp is not None and frame["timestamp_s"] <= previous_timestamp:
+                    errors.append(f"frames.jsonl:{line_number}: timestamp_s must be strictly increasing (possible simulation reset)")
+                previous_timestamp = frame["timestamp_s"]
             validate_rigid_transform(frame.get("T_world_camera"), f"frame {frame_id}.T_world_camera", errors)
             validate_rigid_transform(frame.get("T_world_effector"), f"frame {frame_id}.T_world_effector", errors)
             if "T_world_object_gt" in frame:

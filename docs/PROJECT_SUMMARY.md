@@ -1,6 +1,21 @@
 # EA-FoundationPose project summary
 
-Last updated: 2026-09-11 (Asia/Seoul)
+Last updated: 2026-09-21 (Asia/Seoul)
+
+## Latest milestone
+
+The 192-frame OMY dynamic/occlusion control is validated end to end. It
+contains six fully hidden frames; unchanged FoundationPose reaches 106.435 mm
+maximum translation error during occlusion and returns to 8.690 mm by frame
+118. The capture now corrects the PhysX COM/link-origin Jacobian mismatch,
+synchronizes image rendering with poses, checks commanded robot motion, and
+reports failures reliably. All 19 offline tests pass. Full details and
+reproduction commands are in [`ISAAC_DYNAMIC_CONTROL.md`](ISAAC_DYNAMIC_CONTROL.md).
+
+This checkpoint packages the validated September 21 dynamic-control milestone.
+Experimental robot-geometry export work is excluded; effector-aware inference
+is not implemented in this milestone. Historical Git checkpoints below describe
+earlier milestones; use `git log` for the current publication history.
 
 ## Goal
 
@@ -46,9 +61,9 @@ The intended first EA feature is end-effector-aware pose-candidate pruning.
   both `T_camera_object` and `T_effector_object`.
 - Added dependency-free rigid-transform composition code and tests.
 
-### Verification
+### Verification history
 
-- All six unit tests pass.
+- The initial six unit tests passed.
 - Python compilation, Bash syntax, JSON Schema validation, and Git whitespace
   checks pass.
 - A three-frame contract fixture built from the installed mustard sequence
@@ -63,10 +78,10 @@ The intended first EA feature is end-effector-aware pose-candidate pruning.
   aligned; see `docs/ISAAC_CONTROL.md`.
 - Added a dependency-free pose evaluator that reports per-frame and aggregate
   translation/rotation error in camera and end-effector coordinates. It
-  reproduces the recorded control values; all 12 unit tests pass.
-- Drafted an opt-in smooth end-effector sweep for the next occlusion capture.
-  Its initial simulator run was stopped before completion, so the mode is not
-  yet validated and no dynamic result is claimed.
+  reproduces the recorded control values; that checkpoint's 12 unit tests passed.
+- Initially drafted an opt-in end-effector sweep; its first simulator run was
+  stopped before completion. The corrected and validated 192-frame sweep now
+  supersedes that draft (see Latest milestone above); all 19 tests pass.
 - Downloaded data and generated outputs remain ignored by Git.
 
 ## Git state
@@ -80,10 +95,10 @@ ee6bd24 feat: define Isaac export contract
 299de39 chore: initialize EA-FoundationPose workspace
 ```
 
-The worktree and submodule are clean. `origin` is configured as
+The upstream submodule remains unchanged. `origin` is configured as
 `https://github.com/mjcha924/Effector-Aware-Foundation-Pose.git`. The remote's
 initial placeholder history was integrated without discarding either history,
-and `main` was pushed at merge commit `774c34f`.
+and `main` was originally pushed at merge commit `774c34f`.
 
 ## Current blocker
 
@@ -104,9 +119,9 @@ No shared-environment dependency or ROBOTIS Lab source was changed.
 
 ## Next steps
 
-1. Freeze the ten-frame run as the static Isaac control and capture a longer
-   motion/occlusion sequence.
-2. Define quantitative pose, occlusion, candidate-count, runtime, and recovery
-   metrics.
+1. Keep the static and accepted dynamic controls fixed for comparison.
+2. Add registration/recovery trials on the dynamic sequence, with explicit
+   prior assumptions and no simulator-truth leakage.
 3. Implement and ablate end-effector-aware candidate pruning without changing
-   the pinned upstream FoundationPose submodule.
+   the pinned upstream FoundationPose submodule. Tracking already uses one
+   pose, so pruning should be evaluated on registration/recovery searches.

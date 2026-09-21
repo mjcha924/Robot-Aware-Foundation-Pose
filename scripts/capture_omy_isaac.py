@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
+import traceback
 from pathlib import Path
 
 from isaaclab.app import AppLauncher
@@ -43,6 +45,11 @@ parser.add_argument(
     help="Total lateral travel centered over the bottle during an effector sweep.",
 )
 parser.add_argument("--overwrite", action="store_true")
+parser.add_argument("--diagnose-ik", action="store_true", help="Audit the IK Jacobian by joint perturbations, then exit without a capture.")
+parser.add_argument("--max-effector-error-m", type=float, default=0.03,
+                    help="Reject a sweep if the tool deviates farther than this from its command.")
+parser.add_argument("--sweep-pitch-deg", type=float, default=90.0,
+                    help="Pitch the home tool orientation about base +Y during the sweep (90 points fingers down).")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 args_cli.headless = True
@@ -52,6 +59,7 @@ robotis_package = args_cli.robotis_lab_root.resolve() / "source" / "robotis_lab"
 if not (robotis_package / "robotis_lab").is_dir():
     parser.error(f"ROBOTIS Lab Python package not found under {robotis_package}")
 sys.path.insert(0, str(robotis_package))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 app_launcher = AppLauncher(vars(args_cli))
 simulation_app = app_launcher.app
@@ -66,8 +74,11 @@ from pxr import Usd, UsdGeom  # noqa: E402
 
 import robotis_lab  # noqa: E402,F401
 from isaaclab.envs import ManagerBasedRLEnv  # noqa: E402
+from isaaclab.managers import RecorderManagerBaseCfg  # noqa: E402
 from isaaclab_tasks.utils import parse_env_cfg  # noqa: E402
-from isaaclab.utils.math import matrix_from_quat, subtract_frame_transforms  # noqa: E402
+from isaaclab.utils.math import compute_pose_error, matrix_from_quat, quat_apply, quat_mul, subtract_frame_transforms  # noqa: E402
+from calibration.isaac_ik import LinkOriginIKAction  # noqa: E402
+from evaluation.sequence_metrics import require_sweep_tracking  # noqa: E402
 
 
 TASK = "RobotisLab-Real-Pick-Place-Bottle-OMY-v0"
@@ -163,31 +174,66 @@ def sweep_position(
     if progress < 0.40:
         blend = smoothstep((progress - 0.15) / 0.25)
         return home + (start - home) * blend
-    if progress < 0.70:
-        blend = smoothstep((progress - 0.40) / 0.30)
+    if progress < 0.55:
+        blend = smoothstep((progress - 0.40) / 0.15)
         return start + (end - start) * blend
+    if progress < 0.70:
+        blend = smoothstep((progress - 0.55) / 0.15)
+        return end + (start - end) * blend
     if progress < 0.90:
         blend = smoothstep((progress - 0.70) / 0.20)
-        return end + (home - end) * blend
+        return start + (home - start) * blend
     return home
 
 
 def main() -> int:
     if args_cli.frames < 1 or args_cli.warmup_steps < 0 or args_cli.stride < 1:
         parser.error("--frames and --stride must be positive; --warmup-steps must be non-negative")
-    if args_cli.sweep_clearance_m <= 0.0 or args_cli.sweep_span_m <= 0.0:
-        parser.error("--sweep-clearance-m and --sweep-span-m must be positive")
+    if any(not np.isfinite(value) or value <= 0 for value in (args_cli.sweep_clearance_m, args_cli.sweep_span_m)):
+        parser.error("--sweep-clearance-m and --sweep-span-m must be finite and positive")
+    if not np.isfinite(args_cli.sweep_pitch_deg):
+        parser.error("--sweep-pitch-deg must be finite")
+    if not np.isfinite(args_cli.max_effector_error_m) or args_cli.max_effector_error_m <= 0:
+        parser.error("--max-effector-error-m must be finite and positive")
     output = args_cli.output.resolve()
     prepare_output(output, args_cli.overwrite)
 
     env_cfg = parse_env_cfg(TASK, device=args_cli.device, num_envs=1)
     env_cfg.init_action_cfg("mimic_ik" if args_cli.motion == "effector-sweep" else "record")
+    if args_cli.motion == "effector-sweep":
+        # This Isaac Lab version adds the body-local offset directly to a
+        # base-frame Jacobian. Command link6 itself instead, converting the
+        # desired tool position below; no upstream patch is necessary.
+        env_cfg.actions.arm_action.body_offset = None
+        env_cfg.actions.arm_action.class_type = LinkOriginIKAction
+        # Use speed-limited, well-damped drives for the controlled sweep.
+        # These overrides apply only to this opt-in capture mode.
+        for actuator_name in ("DY_80", "DY_70"):
+            actuator = env_cfg.scene.robot.actuators[actuator_name]
+            actuator.stiffness = 1000.0
+            actuator.damping = 100.0
+            actuator.velocity_limit_sim = 1.5
+    # The task recorder otherwise retains every RGB observation on the GPU.
+    # Our synchronized exporter owns recording for this workflow.
+    env_cfg.recorders = RecorderManagerBaseCfg()
     env_cfg.seed = args_cli.seed
     env_cfg.scene.num_envs = 1
     env_cfg.scene.replicate_physics = False
     env_cfg.num_rerenders_on_reset = 2
+    # Render at the final physics substep so RGB-D and exported poses share
+    # the same simulation time (the task defaults to decimation=5, render=2).
+    env_cfg.sim.render_interval = env_cfg.decimation
+    capture_steps = args_cli.warmup_steps + args_cli.frames * args_cli.stride
+    env_cfg.episode_length_s = max(
+        env_cfg.episode_length_s, (capture_steps + 2) * env_cfg.decimation * env_cfg.sim.dt
+    )
 
     camera_name = f"cam_{args_cli.camera}"
+    unused_camera = "cam_wrist" if args_cli.camera == "top" else "cam_top"
+    setattr(env_cfg.scene, unused_camera, None)
+    setattr(env_cfg.observations.policy, unused_camera, None)
+    if unused_camera == "cam_top":
+        env_cfg.events.randomize_top_camera = None
     camera_cfg = getattr(env_cfg.scene, camera_name)
     camera_cfg.data_types = ["rgb", "distance_to_image_plane", "semantic_segmentation"]
     camera_cfg.colorize_semantic_segmentation = True
@@ -204,6 +250,49 @@ def main() -> int:
     env.reset()
     try:
         robot = env.scene["robot"]
+        if args_cli.diagnose_ik:
+            if args_cli.motion != "effector-sweep":
+                raise ValueError("--diagnose-ik requires --motion effector-sweep")
+            term = env.action_manager.get_term("arm_action")
+            original = robot.data.joint_pos.clone()
+
+            def place_joints(positions):
+                robot.write_joint_state_to_sim(positions, torch.zeros_like(positions))
+                robot.set_joint_position_target(positions)
+                env.scene.write_data_to_sim()
+                env.sim.step(render=False)
+                env.scene.update(env.physics_dt)
+
+            diagnostics = []
+            for joint_id in term._joint_ids:
+                place_joints(original)
+                before_position, before_quaternion = term._compute_frame_pose()
+                before_position, before_quaternion = before_position.clone(), before_quaternion.clone()
+                before_joints = robot.data.joint_pos[:, term._joint_ids].clone()
+                jacobian = term._compute_frame_jacobian().clone()
+                perturbed = original.clone()
+                perturbed[:, joint_id] += 0.001
+                place_joints(perturbed)
+                position, quaternion = term._compute_frame_pose()
+                dp, dr = compute_pose_error(before_position, before_quaternion, position, quaternion)
+                observed = torch.cat((dp, dr), dim=-1)
+                dq = robot.data.joint_pos[:, term._joint_ids] - before_joints
+                predicted = (jacobian @ dq.unsqueeze(-1)).squeeze(-1)
+                diagnostics.append({"joint": robot.data.joint_names[joint_id], "observed_delta": observed[0].tolist(),
+                                    "predicted_delta": predicted[0].tolist(), "jacobian": jacobian[0].tolist()})
+            report = {"body_names": robot.body_names, "joint_names": robot.joint_names,
+                      "fixed_base": robot.is_fixed_base, "body_index": term._body_idx,
+                      "jacobian_body_index": term._jacobi_body_idx, "perturbations": diagnostics}
+            report["max_translation_discrepancy_m_per_rad"] = max(
+                float(np.linalg.norm(np.asarray(row["observed_delta"][:3]) - row["predicted_delta"][:3])) / 0.001
+                for row in diagnostics
+            )
+            report["passed"] = report["max_translation_discrepancy_m_per_rad"] < 0.001
+            (output / "ik_diagnostics.json").write_text(json.dumps(report, indent=2) + "\n")
+            print(json.dumps(report, indent=2), flush=True)
+            if not report["passed"]:
+                raise RuntimeError("IK Jacobian failed the finite-difference check; see ik_diagnostics.json")
+            return 0
         joint_index = {name: index for index, name in enumerate(robot.data.joint_names)}
         gripper = robot.data.joint_pos[:, joint_index["rh_r1_joint"] : joint_index["rh_r1_joint"] + 1].clone()
         if args_cli.motion == "static":
@@ -236,6 +325,21 @@ def main() -> int:
                 f"clearance={args_cli.sweep_clearance_m:.3f} m, span={args_cli.sweep_span_m:.3f} m"
             )
 
+            half_pitch = np.deg2rad(args_cli.sweep_pitch_deg) / 2.0
+            pitch = home_quaternion.new_tensor([[np.cos(half_pitch), 0.0, np.sin(half_pitch), 0.0]])
+            sweep_quaternion = quat_mul(pitch, home_quaternion)
+            if float(torch.sum(sweep_quaternion * home_quaternion)) < 0:
+                sweep_quaternion = -sweep_quaternion
+
+            def orientation_at(progress: float) -> torch.Tensor:
+                if progress < 0.4:
+                    blend = smoothstep((progress - 0.15) / 0.25)
+                else:
+                    blend = 1.0 - smoothstep((progress - 0.7) / 0.2)
+                return torch.nn.functional.normalize(
+                    (1.0 - blend) * home_quaternion + blend * sweep_quaternion, dim=-1
+                )
+
             def action_at(progress: float) -> torch.Tensor:
                 position = sweep_position(
                     progress,
@@ -244,7 +348,10 @@ def main() -> int:
                     args_cli.sweep_clearance_m,
                     args_cli.sweep_span_m,
                 ).unsqueeze(0)
-                return torch.cat((position, home_quaternion, gripper), dim=1)
+                quaternion = orientation_at(progress)
+                tool_offset = position.new_tensor([[0.0, -0.248, 0.0]])
+                link_position = position - quat_apply(quaternion, tool_offset)
+                return torch.cat((link_position, quaternion, gripper), dim=1)
 
         action = action_at(0.0)
         if action.shape[1] != env.action_manager.total_action_dim:
@@ -252,8 +359,13 @@ def main() -> int:
                 f"OMY action dimension changed: assembled {action.shape[1]}, manager expects {env.action_manager.total_action_dim}"
             )
 
+        def checked_step(command: torch.Tensor) -> None:
+            _, _, terminated, truncated, _ = env.step(command)
+            if bool(terminated.any()) or bool(truncated.any()):
+                raise RuntimeError("capture interrupted by an environment reset; refusing discontinuous ground truth")
+
         for _ in range(args_cli.warmup_steps):
-            env.step(action)
+            checked_step(action)
 
         camera = env.scene[camera_name]
         intrinsic = camera.data.intrinsic_matrices[0].detach().cpu().numpy()
@@ -262,13 +374,13 @@ def main() -> int:
         for frame_index in range(args_cli.frames):
             for stride_index in range(args_cli.stride):
                 motion_step = frame_index * args_cli.stride + stride_index
-                env.step(action_at(motion_step / motion_steps))
+                checked_step(action_at(motion_step / motion_steps))
             frame_id = f"{frame_index:06d}"
             rgb = camera.data.output["rgb"][0].detach().cpu().numpy()
             depth_m = camera.data.output["distance_to_image_plane"][0, ..., 0].detach().cpu().numpy()
             semantic = camera.data.output["semantic_segmentation"][0].detach().cpu().numpy()
             mask = np.all(semantic[..., :3] == np.asarray(TARGET_RGBA[:3], dtype=np.uint8), axis=-1).astype(np.uint8) * 255
-            if not np.any(mask):
+            if frame_index == 0 and not np.any(mask):
                 unique = np.unique(semantic.reshape(-1, semantic.shape[-1]), axis=0)
                 raise RuntimeError(f"target mask is empty; semantic colors present: {unique[:20].tolist()}")
 
@@ -288,11 +400,26 @@ def main() -> int:
                 {
                     "frame_id": frame_id,
                     "timestamp_s": float(env.episode_length_buf[0].item() * env.step_dt),
+                    "visible_mask_pixels": int(np.count_nonzero(mask)),
+                    "motion_progress": motion_step / motion_steps,
                     "T_world_camera": pose_matrix(camera.data.pos_w[0], camera.data.quat_w_ros[0]),
                     "T_world_effector": pose_matrix(ee_data.target_pos_w[0, 0], ee_data.target_quat_w[0, 0]),
                     "T_world_object_gt": pose_matrix(bottle_data.root_pos_w[0], bottle_data.root_quat_w[0]),
                 }
             )
+            if args_cli.motion == "effector-sweep":
+                desired = sweep_position(
+                    motion_step / motion_steps, home_position[0], bottle_position[0],
+                    args_cli.sweep_clearance_m, args_cli.sweep_span_m,
+                )
+                actual, _ = subtract_frame_transforms(
+                    robot.data.root_pos_w, robot.data.root_quat_w, ee_data.target_pos_w[:, 0],
+                    ee_data.target_quat_w[:, 0],
+                )
+                frames[-1]["effector_command_error_m"] = float(torch.linalg.vector_norm(actual[0] - desired).item())
+                frames[-1]["effector_command_position_base_m"] = desired.tolist()
+                frames[-1]["joint_position_rad"] = robot.data.joint_pos[0].tolist()
+            print(f"Captured {frame_id}: visible target pixels={np.count_nonzero(mask)}", flush=True)
 
         rigid_root_path = env.scene["bottle"].root_physx_view.prim_paths[0]
         vertex_count, triangle_count = write_obj_from_stage(output / "mesh/object.obj", rigid_root_path)
@@ -300,6 +427,14 @@ def main() -> int:
         with (output / "frames.jsonl").open("w", encoding="utf-8") as stream:
             for frame in frames:
                 stream.write(json.dumps(frame, separators=(",", ":")) + "\n")
+        if args_cli.motion == "effector-sweep":
+            try:
+                require_sweep_tracking(frames, args_cli.max_effector_error_m)
+            except ValueError as error:
+                raise RuntimeError(
+                    f"{error}; "
+                    "diagnostic frames were retained but no valid manifest was published"
+                ) from error
         manifest = {
             "schema_version": "1.0",
             "sequence_id": output.name,
@@ -333,13 +468,26 @@ def main() -> int:
                 "robotis_lab_commit": "e32b122d192c2db7fe52cfd3ece74c07f6a418a6",
                 "seed": args_cli.seed,
                 "end_effector": "OMY/link6 offset [0, -0.248, 0]",
+                "joint_names": robot.data.joint_names,
                 "motion": args_cli.motion,
+                "sweep_path": "home_start_end_start_home" if args_cli.motion == "effector-sweep" else None,
+                "active_cameras": [camera_name],
+                "physics_dt_s": env_cfg.sim.dt,
+                "render_interval": env_cfg.sim.render_interval,
+                "decimation": env_cfg.decimation,
+                "stride": args_cli.stride,
+                "ik_command_frame": "link6_origin" if args_cli.motion == "effector-sweep" else None,
+                "ik_jacobian_point": "link_origin_corrected_from_physx_com" if args_cli.motion == "effector-sweep" else None,
+                "sweep_arm_drive": {"stiffness": 1000.0, "damping": 100.0, "velocity_limit_sim": 1.5}
+                if args_cli.motion == "effector-sweep" else None,
+                "max_effector_error_m": args_cli.max_effector_error_m if args_cli.motion == "effector-sweep" else None,
                 "sweep_clearance_m": args_cli.sweep_clearance_m if args_cli.motion == "effector-sweep" else None,
                 "sweep_span_m": args_cli.sweep_span_m if args_cli.motion == "effector-sweep" else None,
+                "sweep_pitch_deg": args_cli.sweep_pitch_deg if args_cli.motion == "effector-sweep" else None,
             },
         }
         (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        print(f"Captured {len(frames)} OMY frames into {output}")
+        print(f"Captured {len(frames)} OMY frames into {output}", flush=True)
         return 0
     finally:
         env.close()
@@ -347,6 +495,14 @@ def main() -> int:
 
 if __name__ == "__main__":
     try:
-        raise SystemExit(main())
-    finally:
-        simulation_app.close()
+        exit_code = main()
+    except BaseException:
+        # Kit shutdown can terminate the process with code zero before Python
+        # prints a pending exception. Preserve errors for unattended captures.
+        traceback.print_exc()
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(1)
+    sys.stdout.flush()
+    simulation_app.close()
+    raise SystemExit(exit_code)

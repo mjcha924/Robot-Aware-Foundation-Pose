@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import shutil
 import sys
+import time
 from pathlib import Path
 
 
@@ -62,6 +64,7 @@ def main() -> int:
     import numpy as np
     import nvdiffrast.torch as dr
     import trimesh
+    import torch
     from estimater import FoundationPose, PoseRefinePredictor, ScorePredictor
     from Utils import draw_posed_3d_box, draw_xyz_axis, set_logging_format, set_seed
 
@@ -101,6 +104,10 @@ def main() -> int:
             mask = cv2.imread(str(sequence / "masks" / f"{frame_id}.png"), cv2.IMREAD_UNCHANGED)
             if mask is None or not np.any(mask):
                 raise RuntimeError(f"initial object mask is empty: {frame_id}")
+
+        torch.cuda.synchronize()
+        inference_start = time.perf_counter()
+        if index == 0:
             t_camera_mesh = estimator.register(
                 K=intrinsic,
                 rgb=rgb,
@@ -115,6 +122,8 @@ def main() -> int:
                 K=intrinsic,
                 iteration=args.track_refine_iter,
             )
+        torch.cuda.synchronize()
+        inference_s = time.perf_counter() - inference_start
 
         # The estimator tracks the raw mesh frame. Convert to the declared
         # object frame before composing it with camera and effector poses.
@@ -130,7 +139,13 @@ def main() -> int:
             "timestamp_s": frame["timestamp_s"],
             "T_camera_object": t_camera_object.tolist(),
             "T_effector_object": t_effector_object.tolist(),
+            "operation": "register" if index == 0 else "track",
+            "candidate_count": len(estimator.rot_grid) if index == 0 else 1,
+            "inference_s": inference_s,
         }
+        for key in ("visible_mask_pixels", "motion_progress"):
+            if key in frame:
+                result[key] = frame[key]
         if "T_world_object_gt" in frame:
             t_camera_object_gt = matmul4(rigid_inverse(frame["T_world_camera"]), frame["T_world_object_gt"])
             result["T_camera_object_gt"] = t_camera_object_gt
@@ -162,6 +177,11 @@ def main() -> int:
         "est_refine_iter": args.est_refine_iter,
         "track_refine_iter": args.track_refine_iter,
         "foundationpose_commit": "a1b694b83e633c2cb6115b9063d940a687759392",
+        "input_metadata_sha256": {
+            name: hashlib.sha256((sequence / name).read_bytes()).hexdigest()
+            for name in ("manifest.json", "frames.jsonl")
+        },
+        "timing": "CUDA-synchronized estimator call; excludes image decoding, pose export and visualization",
     }
     (output / "run.json").write_text(json.dumps(run_info, indent=2) + "\n", encoding="utf-8")
     print(f"Processed {len(results)} frames into {output}")
