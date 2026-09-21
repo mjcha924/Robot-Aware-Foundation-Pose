@@ -96,6 +96,35 @@ T_effector_object = inverse(T_world_effector)
 ground truth and evaluation. It must be identity when the exported OBJ is
 already expressed in that frame.
 
+## Optional robot-geometry extension (version 1)
+
+With `--export-robot-geometry`, `manifest.json` contains a top-level
+`robot_geometry` object. This is an optional extension to contract 1.0; earlier
+captures without robot geometry remain valid.
+
+- `version: 1`, `units: "meter"`, `pose_convention: "T_world_link_origin"`.
+- `pose_source` states the provenance; current captures use ideal simulated
+  link state, not a noisy encoder/FK estimate.
+- `links` lists unique `name`, relative OBJ `path`, `sha256`, `vertex_count`,
+  and `triangle_count` for each rigid link, including arm, wrist, and fingers.
+- OBJ vertices are in that link's origin frame. Files contain geometry-only
+  `v` and triangular `f` records with positive one-based indices. Invisible,
+  proxy, and guide meshes are excluded, as are descendants of other rigid links.
+- Every frame has `T_world_robot_links`, keyed by exactly those link names.
+  Render with `T_camera_link = inverse(T_world_camera) @ T_world_robot_links[name]`.
+- Optional `validation_mask_dir: "robot_masks"` declares synchronized binary
+  Isaac semantic masks for **audit only**. Do not use these as inference inputs.
+
+The validator checks link completeness, transform rigidity, mesh hashes and
+counts, finite vertices, triangle indices, path containment (including symlinks),
+and audit-mask headers. File validation alone does not prove correct alignment:
+run the GPU projection audit described in [ROBOT_GEOMETRY.md](ROBOT_GEOMETRY.md).
+
+Camera poses must be refreshed after reset randomization and on every frame.
+The exporter now sets `update_latest_camera_pose=True`. Older captures made
+with the default False have a cached-pose calibration caveat; retain them as
+historical controls, not as the corrected reference for geometry-aware work.
+
 The schema also permits optional producer metadata: a camera name, mesh source
 and triangle/vertex counts, and a top-level `source` object. Consumers must not
 derive geometry or coordinate conventions from those provenance fields.

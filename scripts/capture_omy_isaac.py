@@ -8,6 +8,7 @@ existing ROBOTIS Lab task and assets without modifying that worktree.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -45,6 +46,8 @@ parser.add_argument(
     help="Total lateral travel centered over the bottle during an effector sweep.",
 )
 parser.add_argument("--overwrite", action="store_true")
+parser.add_argument("--export-robot-geometry", action="store_true",
+                    help="Export rigid-link visual meshes and synchronized link poses for EA inference.")
 parser.add_argument("--diagnose-ik", action="store_true", help="Audit the IK Jacobian by joint perturbations, then exit without a capture.")
 parser.add_argument("--max-effector-error-m", type=float, default=0.03,
                     help="Reject a sweep if the tool deviates farther than this from its command.")
@@ -70,7 +73,7 @@ import gymnasium as gym  # noqa: E402
 import numpy as np  # noqa: E402
 import omni.usd  # noqa: E402
 import torch  # noqa: E402
-from pxr import Usd, UsdGeom  # noqa: E402
+from pxr import Usd, UsdGeom, UsdPhysics  # noqa: E402
 
 import robotis_lab  # noqa: E402,F401
 from isaaclab.envs import ManagerBasedRLEnv  # noqa: E402
@@ -113,13 +116,17 @@ def write_obj_from_stage(path: Path, rigid_root_path: str) -> tuple[int, int]:
     vertices: list[tuple[float, float, float]] = []
     triangles: list[tuple[int, int, int]] = []
 
-    for prim in Usd.PrimRange(root):
+    prims = iter(Usd.PrimRange(root))
+    for prim in prims:
+        if prim != root and prim.HasAPI(UsdPhysics.RigidBodyAPI):
+            prims.PruneChildren()
+            continue
         if not prim.IsA(UsdGeom.Mesh):
             continue
         imageable = UsdGeom.Imageable(prim)
         if imageable.ComputeVisibility() == UsdGeom.Tokens.invisible:
             continue
-        if imageable.ComputePurpose() == UsdGeom.Tokens.proxy:
+        if imageable.ComputePurpose() in (UsdGeom.Tokens.proxy, UsdGeom.Tokens.guide):
             continue
         mesh = UsdGeom.Mesh(prim)
         points = mesh.GetPointsAttr().Get()
@@ -142,12 +149,40 @@ def write_obj_from_stage(path: Path, rigid_root_path: str) -> tuple[int, int]:
     if not vertices or not triangles:
         raise RuntimeError(f"no visible triangle meshes found below {rigid_root_path}")
     with path.open("w", encoding="utf-8") as stream:
-        stream.write("# Exported from ROBOTIS Lab plastic_bottle.usd\n")
+        stream.write("# Geometry in the declared rigid-link frame, in meters\n")
         for x, y, z in vertices:
             stream.write(f"v {x:.9g} {y:.9g} {z:.9g}\n")
         for a, b, c in triangles:
             stream.write(f"f {a} {b} {c}\n")
     return len(vertices), len(triangles)
+
+
+def export_robot_geometry(output: Path, robot) -> dict:
+    """Export robot-only geometry; never read object poses or segmentation."""
+    stage = omni.usd.get_context().get_stage()
+    root = stage.GetPrimAtPath(robot.root_physx_view.prim_paths[0])
+    paths = {}
+    for prim in Usd.PrimRange(root):
+        if prim.HasAPI(UsdPhysics.RigidBodyAPI):
+            name = prim.GetName()
+            if name in paths:
+                raise RuntimeError(f"ambiguous robot link name: {name}")
+            paths[name] = str(prim.GetPath())
+    directory = output / "robot_meshes"
+    directory.mkdir()
+    (output / "robot_masks").mkdir()
+    links = []
+    for name in robot.body_names:
+        if name not in paths:
+            raise RuntimeError(f"robot rigid link not found in USD: {name}; available: {paths}")
+        path = directory / f"{name}.obj"
+        vertices, triangles = write_obj_from_stage(path, paths[name])
+        links.append({"name": name, "path": str(path.relative_to(output)),
+                      "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                      "vertex_count": vertices, "triangle_count": triangles})
+    return {"version": 1, "units": "meter", "pose_convention": "T_world_link_origin",
+            "validation_mask_dir": "robot_masks",
+            "pose_source": "simulated robot link state (ideal proprioception)", "links": links}
 
 
 def smoothstep(value: float) -> float:
@@ -235,6 +270,10 @@ def main() -> int:
     if unused_camera == "cam_top":
         env_cfg.events.randomize_top_camera = None
     camera_cfg = getattr(env_cfg.scene, camera_name)
+    # Camera reset randomization changes the rendered pose after the sensor's
+    # reset cache is populated. The default returns that stale pose forever.
+    # Also required for a wrist camera that moves with the robot.
+    camera_cfg.update_latest_camera_pose = True
     camera_cfg.data_types = ["rgb", "distance_to_image_plane", "semantic_segmentation"]
     camera_cfg.colorize_semantic_segmentation = True
     camera_cfg.semantic_segmentation_mapping = {
@@ -245,11 +284,14 @@ def main() -> int:
         "class:BACKGROUND": (0, 0, 0, 255),
     }
     env_cfg.scene.bottle.spawn.semantic_tags = [("class", "target_object")]
+    if args_cli.export_robot_geometry:
+        env_cfg.scene.robot.spawn.semantic_tags = [("class", "robot")]
 
     env: ManagerBasedRLEnv = gym.make(TASK, cfg=env_cfg).unwrapped
     env.reset()
     try:
         robot = env.scene["robot"]
+        robot_geometry = export_robot_geometry(output, robot) if args_cli.export_robot_geometry else None
         if args_cli.diagnose_ik:
             if args_cli.motion != "effector-sweep":
                 raise ValueError("--diagnose-ik requires --motion effector-sweep")
@@ -393,6 +435,11 @@ def main() -> int:
                 raise RuntimeError(f"failed to write depth frame {frame_id}")
             if not cv2.imwrite(str(output / "masks" / f"{frame_id}.png"), mask):
                 raise RuntimeError(f"failed to write mask frame {frame_id}")
+            if robot_geometry is not None:
+                # Simulator semantics are audit-only, never an inference input.
+                robot_mask = np.all(semantic[..., :3] == [90, 110, 255], axis=-1).astype(np.uint8) * 255
+                if not cv2.imwrite(str(output / "robot_masks" / f"{frame_id}.png"), robot_mask):
+                    raise RuntimeError(f"failed to write robot audit mask {frame_id}")
 
             ee_data = env.scene["ee_frame"].data
             bottle_data = env.scene["bottle"].data
@@ -407,6 +454,11 @@ def main() -> int:
                     "T_world_object_gt": pose_matrix(bottle_data.root_pos_w[0], bottle_data.root_quat_w[0]),
                 }
             )
+            if robot_geometry is not None:
+                frames[-1]["T_world_robot_links"] = {
+                    name: pose_matrix(robot.data.body_link_pos_w[0, index], robot.data.body_link_quat_w[0, index])
+                    for index, name in enumerate(robot.body_names)
+                }
             if args_cli.motion == "effector-sweep":
                 desired = sweep_position(
                     motion_step / motion_steps, home_position[0], bottle_position[0],
@@ -472,6 +524,7 @@ def main() -> int:
                 "motion": args_cli.motion,
                 "sweep_path": "home_start_end_start_home" if args_cli.motion == "effector-sweep" else None,
                 "active_cameras": [camera_name],
+                "update_latest_camera_pose": True,
                 "physics_dt_s": env_cfg.sim.dt,
                 "render_interval": env_cfg.sim.render_interval,
                 "decimation": env_cfg.decimation,
@@ -486,6 +539,8 @@ def main() -> int:
                 "sweep_pitch_deg": args_cli.sweep_pitch_deg if args_cli.motion == "effector-sweep" else None,
             },
         }
+        if robot_geometry is not None:
+            manifest["robot_geometry"] = robot_geometry
         (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         print(f"Captured {len(frames)} OMY frames into {output}", flush=True)
         return 0

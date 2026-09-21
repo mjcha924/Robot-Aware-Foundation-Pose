@@ -1,6 +1,6 @@
 # EA-FoundationPose setup status
 
-Last updated: 2026-09-21 (Asia/Seoul)
+Last updated: 2026-09-22 (Asia/Seoul)
 
 ## Current checkpoint
 
@@ -25,13 +25,21 @@ Last updated: 2026-09-21 (Asia/Seoul)
 - FoundationPose processed the ten-frame OMY capture successfully with mean
   errors of 8.12 mm translation and 1.20 degrees rotation against Isaac truth
 - A dependency-free pose evaluator reproduces those control metrics in both
-  camera and end-effector coordinates; all 19 offline unit tests pass
+  camera and end-effector coordinates; all 34 offline unit tests pass
 - A 192-frame dynamic OMY control now passes motion and export validation,
   with six fully occluded frames. FoundationPose completes all frames: mean
   errors 12.347 mm / 4.343 degrees; maximum 106.435 mm / 34.207 degrees.
 - Corrected the simulator COM/link-origin Jacobian mismatch, tool offsets,
   capture synchronization, camera/recorder overhead, and hidden failure exits.
   See `docs/ISAAC_DYNAMIC_CONTROL.md` for the verified diagnosis and results.
+- Added opt-in robot-link mesh/pose export, strict validation, and a GPU
+  projection audit. The audit exposed a cached camera pose after randomization;
+  new captures use live camera poses. Earlier pose-error figures above carry
+  this calibration caveat. See `docs/ROBOT_GEOMETRY.md` for the new checkpoint.
+- Corrected geometry: all 192 frames / 11 links pass projection validation
+  (minimum IoU 0.98357; worst depth p95 error 0.477 mm). The unchanged estimator
+  completes the new capture: overall mean 5.332 mm / 4.671 degrees; visible-area
+  groups average 0.937 mm versus 36.098 mm translation error.
 
 ## Repository progress
 

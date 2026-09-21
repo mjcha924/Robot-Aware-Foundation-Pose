@@ -1,73 +1,80 @@
 # Current project handoff
 
-Saved: 2026-09-21 (Asia/Seoul)
+Saved: 2026-09-22 (Asia/Seoul)
 
-## Workspace and verified checkpoint
+## Resume from GitHub
 
-- Repository: `/home/mjcha/effector-aware-foundationpose`.
-- Branch: `main`. This checkpoint records the validated dynamic-control
-  milestone built on `84d34d8`; use `git log` for its publication commit.
-  Experimental robot-geometry export work is excluded from this milestone.
-- FoundationPose submodule remains unchanged at
-  `a1b694b83e633c2cb6115b9063d940a687759392`.
-- GPU remains RTX 3070 / 8 GB with working driver 580.178.04.
-- The original 737-frame upstream baseline and ten-frame Isaac static control
-  remain intact. Static error still reproduces 8.117 mm / 1.196 degrees.
-- New accepted dynamic export:
-  `data/isaac_exports/omy_sweep_retrace_20260921`.
-- New unchanged-estimator results:
-  `outputs/omy_sweep_retrace_20260921_control`.
-- All 192 frames passed export validation and inference. The capture contains
-  six fully hidden frames and 24 frames below half the initial reference mask
-  area. Tool-command error is 4.629 mm mean / 29.165 mm maximum, below the
-  30 mm capture gate.
-- Mean pose error: 12.347 mm / 4.343 degrees. Peak: 106.435 mm / 34.207 degrees.
-  At frame 118, error is back to 8.690 mm / 3.924 degrees.
-- Cold registration takes 3.026 s for 252 candidates; tracking averages
-  23.984 ms per call (CUDA-synchronized estimator time only).
-- All 19 offline tests pass. Capture, inference, and error-reporting paths
-  were exercised on the GPU.
+Repository: `/home/mjcha/effector-aware-foundationpose`, branch `main`.
+This checkpoint completes robot-geometry export and projection validation on
+top of `65203c9` (the previous dynamic-control milestone). Use `git log` for
+the publication commit. No unfinished source changes are required to resume.
 
-See [ISAAC_DYNAMIC_CONTROL.md](ISAAC_DYNAMIC_CONTROL.md) for reproduction
-commands, artifact hashes, metrics, limitations and the results plot.
+**Effector-aware candidate filtering is not implemented yet.** The reusable
+robot depth renderer and corrected-calibration control are ready for it.
+Read [ROBOT_GEOMETRY.md](ROBOT_GEOMETRY.md) for results, hashes, and complete
+capture/audit/inference commands. Raw simulator data, meshes, pretrained assets,
+and outputs are ignored by Git; a fresh machine must install prerequisites
+and regenerate the capture. The selected projection overlay is committed.
 
-## Fixes made
+## Verified checkpoint
 
-The sweep draft exposed two coordinate issues: PhysX provides a COM Jacobian
-while the task action uses link-origin poses, and the action's tool offset was
-not rotated into the Jacobian frame. Our local IK action and link-origin
-commands fix those issues. All six joint perturbation checks passed; maximum
-translational Jacobian discrepancy dropped from 0.10324 to 0.000133 m/rad.
+- Unchanged FoundationPose submodule: `a1b694b83e633c2cb6115b9063d940a687759392`.
+- RTX 3070 / 8 GB, driver 580.178.04; validated Docker images remain
+  `robotis/robotis-lab:latest` and `foundationpose:latest`.
+- Accepted geometry capture:
+  `data/isaac_exports/omy_robot_geometry_calibrated_20260922`.
+- Audit: `outputs/omy_robot_geometry_calibrated_20260922_audit`.
+- Unchanged estimator: `outputs/omy_robot_geometry_calibrated_20260922_control`.
+- All 192 frames and 11 links pass mesh/pose validation and the GPU projection
+  audit: minimum visible robot IoU 0.98357, minimum coverage 0.99975, worst
+  per-frame depth p95 error 0.477 mm. Median robot render time is 2.77 ms,
+  excluding initialization, readback and audit.
+- Sweep command error: 4.629 mm mean / 29.165 mm maximum (30 mm gate).
+- Six fully hidden frames and 24 below half the initial visible mask area.
+- Corrected baseline mean pose error: 5.332 mm / 4.671 degrees overall;
+  0.937 mm / 3.090 degrees in the higher-visible-area group;
+  36.098 mm / 15.735 degrees in the lower-visible-area group.
+- Cold registration: 3.012 s / 252 candidates. Tracking: 23.282 ms mean,
+  one pose per call. Estimator-only timings, not end-to-end throughput.
+- All 34 offline tests pass; Python compilation and shell/whitespace checks
+  pass. Capture, GPU audit, and full unchanged inference completed successfully.
 
-The accepted trajectory pitches the fingers downward, sweeps out and back,
-then retraces its approach home. Direct-return trajectories failed the motion
-gate even after slowing them; retain those attempts only as diagnostics.
+## Important correction
 
-Capture now uses one camera, disables the redundant recorder, renders at the
-final physics substep, detects resets, measures motion, and rejects bad sweeps
-without publishing a valid manifest. Python errors are printed and return
-nonzero before Kit shutdown can mask them. The pose runner records operation,
-candidate count, timing and input metadata hashes. New analysis and plotting
-entry points summarize motion, visibility, pose error and timing.
+The robot projection audit exposed Isaac Lab's cached camera pose after reset
+randomization. `update_latest_camera_pose=True` fixes it. The actual camera
+pose differs from the stale export by 10.259 mm / 0.658 degrees. Earlier
+static/dynamic error numbers are historical and calibration-biased; they are
+not the reference for new EA comparisons. Their raw artifacts are preserved.
+
+`omy_ea_geometry_20260921` is the unversioned prototype export.
+`omy_robot_geometry_v1_20260922` is a negative-control diagnostic: its stale
+camera projection fails the same acceptance gates passed by the calibrated
+capture. Neither should substitute for the accepted geometry capture.
 
 ## Next work
 
-1. Preserve both accepted controls and add explicit registration/recovery
-   trials. Normal FoundationPose tracking uses one pose; candidate pruning
-   affects the 252-candidate registration search.
-2. Define an effector-aware pruning rule with a valid source of constraints.
-   In this sequence the gripper occludes a free bottle; a constant
-   object-to-effector transform is not valid. Use robot geometry, or create
-   a separately verified grasped-object experiment.
-3. Implement and ablate pruning in this repository. Ground-truth object
-   transforms must remain evaluation-only.
+1. Use `src/urdf_render/robot_depth.py` to render arm/wrist/finger occlusion from
+   robot meshes and link poses. It takes no bottle ground truth or semantic
+   robot masks; simulator robot masks are used only by the projection audit.
+2. Implement conservative candidate screening in our adapter, leaving upstream
+   untouched. Account for candidate bottle surfaces hidden behind the robot;
+   do not mistake missing visual evidence there for a bad pose.
+3. Add registration/recovery trials and compare original FoundationPose,
+   matched-count random candidates, geometry-only screening, and robot-aware
+   screening. Include geometry overhead, candidate retention, pose errors,
+   failures, and recovery latency. Test calibration perturbations and separate
+   tuning sequences from held-out evaluation.
 
-Candidate pruning has not yet been implemented. The dynamic-control milestone
-is complete; no long-running simulator or inference job is needed to resume.
+The gripper occludes a **free bottle**, not a rigidly grasped one. A constant
+object-to-effector prior would be invalid. Object ground truth stays
+evaluation-only. If simulator object masks are used for registration/recovery,
+disclose them and supply them identically to all methods. Ordinary tracking
+uses one pose, so candidate pruning is not automatically a tracking speedup.
 
-## Preservation notes
+## Preservation
 
-The shared ROBOTIS Lab checkout has pre-existing user edits; do not reset it.
-It and the upstream FoundationPose source were not edited in this session.
-Generated captures/results and pretrained assets remain ignored. The selected
-results plot is under `docs/assets/isaac_omy_dynamic_control.png`.
+The shared ROBOTIS Lab checkout has pre-existing user changes; do not reset it.
+Neither it nor upstream FoundationPose was edited. The original 737-frame
+official demo and old static/dynamic controls remain intact. No simulator or
+inference job needs to remain running between sessions.

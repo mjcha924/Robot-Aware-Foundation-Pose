@@ -47,6 +47,8 @@ def main() -> int:
     parser.add_argument("--track-refine-iter", type=int, default=2)
     parser.add_argument("--save-vis", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--audit-robot-geometry", action="store_true",
+                        help="Validate robot-only projection instead of running object pose inference.")
     args = parser.parse_args()
 
     sequence = args.sequence.resolve()
@@ -57,6 +59,11 @@ def main() -> int:
             print(f"ERROR: {error}", file=sys.stderr)
         return 2
     prepare_output(output, args.overwrite)
+    if args.audit_robot_geometry:
+        from audit_robot_geometry import audit
+        manifest, frames = load_metadata(sequence)
+        audit(sequence, output, manifest, frames)
+        return 0
 
     # Heavy imports stay below validation so malformed input fails quickly.
     import cv2

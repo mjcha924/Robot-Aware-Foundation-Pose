@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -170,6 +171,85 @@ def validate_manifest(manifest: Any, errors: list[str]) -> None:
         errors.append("manifest.segmentation.initial_mask_only: expected a boolean")
 
 
+def validate_robot_geometry(root: Path, geometry: Any, errors: list[str]) -> set[str]:
+    """Validate optional version-1 robot geometry without loading GPU packages."""
+    names: set[str] = set()
+    if not isinstance(geometry, dict):
+        errors.append("robot_geometry: expected an object")
+        return names
+    for key, expected in (("version", 1), ("units", "meter"),
+                          ("pose_convention", "T_world_link_origin")):
+        if geometry.get(key) != expected or isinstance(geometry.get(key), bool):
+            errors.append(f"robot_geometry.{key}: expected {expected!r}")
+    if not isinstance(geometry.get("pose_source"), str) or not geometry["pose_source"]:
+        errors.append("robot_geometry.pose_source: expected a non-empty string")
+    if "validation_mask_dir" in geometry and geometry["validation_mask_dir"] != "robot_masks":
+        errors.append("robot_geometry.validation_mask_dir: expected 'robot_masks'")
+    links = geometry.get("links")
+    if not isinstance(links, list) or not links:
+        errors.append("robot_geometry.links: expected a non-empty list")
+        return names
+    paths: set[Path] = set()
+    for link in links:
+        if not isinstance(link, dict):
+            errors.append("robot_geometry.links: expected objects")
+            continue
+        name = link.get("name")
+        if not isinstance(name, str) or not FRAME_ID_RE.fullmatch(name):
+            errors.append("robot_geometry: invalid link name")
+            continue
+        if name in names:
+            errors.append(f"robot_geometry: duplicate link name {name}")
+        names.add(name)
+        label = f"robot_geometry.{name}"
+        relative = safe_relative_path(link.get("path"), f"{label}.path", errors)
+        for key in ("vertex_count", "triangle_count"):
+            if type(link.get(key)) is not int or link[key] < 1:
+                errors.append(f"{label}.{key}: expected a positive integer")
+        digest = link.get("sha256")
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            errors.append(f"{label}.sha256: expected a SHA-256 hex digest")
+        if relative is None:
+            continue
+        path = (root / relative).resolve()
+        if root.resolve() not in path.parents:
+            errors.append(f"{label}.path: resolves outside sequence")
+            continue
+        if path in paths:
+            errors.append(f"{label}.path: duplicate mesh path")
+        paths.add(path)
+        if not path.is_file():
+            errors.append(f"{label}: missing mesh {relative}")
+            continue
+        try:
+            if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                errors.append(f"{label}: mesh SHA-256 mismatch")
+            vertices, faces, max_index = 0, 0, 0
+            for line in path.read_text(encoding="utf-8").splitlines():
+                parts = line.split()
+                if not parts or parts[0].startswith("#"):
+                    continue
+                if parts[0] == "v":
+                    if len(parts) != 4 or not all(math.isfinite(float(x)) for x in parts[1:]):
+                        raise ValueError("vertices must contain three finite coordinates")
+                    vertices += 1
+                elif parts[0] == "f":
+                    indices = [int(x) for x in parts[1:]]
+                    if len(indices) != 3 or min(indices) < 1 or len(set(indices)) != 3:
+                        raise ValueError("faces must be triangles with distinct positive vertex indices")
+                    max_index = max(max_index, *indices)
+                    faces += 1
+                else:
+                    raise ValueError("expected geometry-only OBJ (v/f records)")
+            if (vertices, faces) != (link.get("vertex_count"), link.get("triangle_count")):
+                errors.append(f"{label}: OBJ counts do not match metadata")
+            if max_index > vertices:
+                errors.append(f"{label}: OBJ face index exceeds vertex count")
+        except (OSError, ValueError) as exc:
+            errors.append(f"{label}: invalid OBJ: {exc}")
+    return names
+
+
 def validate_sequence(root: Path) -> list[str]:
     errors: list[str] = []
     manifest_path = root / "manifest.json"
@@ -182,6 +262,12 @@ def validate_sequence(root: Path) -> list[str]:
     validate_manifest(manifest, errors)
     if errors:
         return errors
+
+    robot_names = None
+    if "robot_geometry" in manifest:
+        robot_names = validate_robot_geometry(root, manifest["robot_geometry"], errors)
+        if errors:
+            return errors
 
     width = manifest["image"]["width"]
     height = manifest["image"]["height"]
@@ -238,6 +324,18 @@ def validate_sequence(root: Path) -> list[str]:
             validate_rigid_transform(frame.get("T_world_effector"), f"frame {frame_id}.T_world_effector", errors)
             if "T_world_object_gt" in frame:
                 validate_rigid_transform(frame["T_world_object_gt"], f"frame {frame_id}.T_world_object_gt", errors)
+            if robot_names is not None:
+                poses = frame.get("T_world_robot_links")
+                if not isinstance(poses, dict) or set(poses) != robot_names:
+                    errors.append(f"frame {frame_id}: robot link poses must exactly match declared links")
+                else:
+                    for name, pose in poses.items():
+                        validate_rigid_transform(pose, f"frame {frame_id}.T_world_robot_links.{name}", errors)
+                if "validation_mask_dir" in manifest["robot_geometry"]:
+                    validate_png(root / "robot_masks" / f"{frame_id}.png", expected_size, 8, (0,),
+                                 f"robot audit mask {frame_id}", errors)
+            elif "T_world_robot_links" in frame:
+                errors.append(f"frame {frame_id}: robot link poses require robot_geometry metadata")
             frames.append(frame)
 
     if len(frames) != manifest["frame_count"]:

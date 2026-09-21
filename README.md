@@ -27,13 +27,20 @@ show the estimated 6-DoF bottle pose.
 
 [Watch the short side-by-side Isaac RGB and FoundationPose overlay](docs/assets/isaac_omy_foundationpose_control.mp4).
 
-The **192-frame dynamic control** now includes six completely hidden bottle
-frames. Mean translation error rises from 8.2 mm with at least half the
-reference visible area to 41.2 mm below that level, peaking at 106.4 mm.
-The robot trajectory, synchronized export, and full inference run are validated;
-effector-aware candidate pruning is the next experiment, not yet implemented.
-See [`docs/ISAAC_DYNAMIC_CONTROL.md`](docs/ISAAC_DYNAMIC_CONTROL.md) for the
-results plot, capture fixes, metrics and reproduction commands.
+The **192-frame corrected-calibration control** includes six completely hidden
+bottle frames. Mean translation error rises from 0.94 mm with at least half
+the reference visible area to 36.10 mm below that level, peaking at 101.66 mm.
+The unchanged estimator completed all frames; effector-aware candidate pruning
+is the next experiment, not yet implemented.
+
+**September 22 checkpoint:** robot-link geometry export and a GPU projection
+audit now pass on all 192 frames and 11 links (minimum visible robot IoU
+98.36%). The audit exposed a stale camera-pose cache after reset randomization;
+new captures refresh the camera pose on every frame. This is a calibration
+correction, not an effector-aware accuracy improvement. See
+[`docs/ROBOT_GEOMETRY.md`](docs/ROBOT_GEOMETRY.md) for results and reproduction.
+The [earlier dynamic control](docs/ISAAC_DYNAMIC_CONTROL.md) is retained with
+its calibration caveat.
 
 ## Repository layout
 

@@ -2,6 +2,13 @@
 
 Updated: 2026-09-21 (Asia/Seoul)
 
+**Calibration caveat discovered September 22:** this historical capture used
+Isaac Lab's default cached camera pose despite camera reset randomization.
+The error values below describe the original exported calibration, not a
+corrected camera reference. The images and results are preserved unchanged.
+Use the live-pose capture and projection audit in [ROBOT_GEOMETRY.md](ROBOT_GEOMETRY.md)
+for subsequent geometry-aware experiments.
+
 ## Accepted control
 
 The 192-frame `omy_sweep_retrace_20260921` capture passed the export validator

@@ -2,6 +2,11 @@
 
 Validated: 2026-09-11 (Asia/Seoul)
 
+**Historical calibration caveat:** this capture predates the September 22 fix
+for cached camera poses after reset randomization. Its recorded errors are
+preserved but should not be interpreted as corrected-calibration accuracy.
+See [ROBOT_GEOMETRY.md](ROBOT_GEOMETRY.md) for the live-pose export and audit.
+
 ## Outcome
 
 The first real Isaac/OMY-to-FoundationPose control passed end to end after the

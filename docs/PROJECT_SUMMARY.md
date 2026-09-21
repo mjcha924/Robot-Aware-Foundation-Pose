@@ -1,8 +1,22 @@
 # EA-FoundationPose project summary
 
-Last updated: 2026-09-21 (Asia/Seoul)
+Last updated: 2026-09-22 (Asia/Seoul)
 
 ## Latest milestone
+
+Robot-link geometry export, a strict contract extension, and a GPU projection
+audit are now implemented. The audit caught a cached camera pose after reset
+randomization; the capture adapter now refreshes camera poses on every frame.
+All 34 offline tests pass. See [ROBOT_GEOMETRY.md](ROBOT_GEOMETRY.md) for the
+new checkpoint and reproduction steps. Effector-aware inference is still the
+next step, not an implemented improvement.
+
+All 192 corrected-calibration frames / 11 links pass projection checks (minimum
+IoU 0.98357). The unchanged estimator completes the corrected capture with
+5.332 mm / 4.671 degrees overall mean error. Translation error averages 0.937 mm
+with at least half the reference visible area and 36.098 mm below that level.
+
+## Previous dynamic-control milestone (historical calibration)
 
 The 192-frame OMY dynamic/occlusion control is validated end to end. It
 contains six fully hidden frames; unchanged FoundationPose reaches 106.435 mm
@@ -12,10 +26,10 @@ synchronizes image rendering with poses, checks commanded robot motion, and
 reports failures reliably. All 19 offline tests pass. Full details and
 reproduction commands are in [`ISAAC_DYNAMIC_CONTROL.md`](ISAAC_DYNAMIC_CONTROL.md).
 
-This checkpoint packages the validated September 21 dynamic-control milestone.
-Experimental robot-geometry export work is excluded; effector-aware inference
-is not implemented in this milestone. Historical Git checkpoints below describe
-earlier milestones; use `git log` for the current publication history.
+Commit `65203c9` packages the September 21 dynamic-control milestone. Its
+reported errors above predate the live camera-pose correction and are retained
+as historical measurements, not corrected-calibration accuracy. Historical Git
+checkpoints below describe earlier milestones; use `git log` for current history.
 
 ## Goal
 

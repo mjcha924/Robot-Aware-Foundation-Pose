@@ -19,16 +19,24 @@ case "$sequence" in
 esac
 container_sequence="/workspace/${sequence#"$project_root"/}"
 
-for required_path in \
-  "$project_root/third_party/FoundationPose/mycpp/build" \
-  "$project_root/third_party/FoundationPose/weights/2023-10-28-18-33-37/model_best.pth" \
-  "$project_root/third_party/FoundationPose/weights/2024-01-11-20-02-45/model_best.pth"
-do
-  if [[ ! -e "$required_path" ]]; then
-    echo "Missing FoundationPose prerequisite: $required_path" >&2
-    exit 1
-  fi
+audit_only=false
+for argument in "$@"; do
+  if [[ "$argument" == "--audit-robot-geometry" ]]; then audit_only=true; fi
 done
+
+# Robot-only rasterization does not load pose networks or the native extension.
+if [[ "$audit_only" == false ]]; then
+  for required_path in \
+    "$project_root/third_party/FoundationPose/mycpp/build" \
+    "$project_root/third_party/FoundationPose/weights/2023-10-28-18-33-37/model_best.pth" \
+    "$project_root/third_party/FoundationPose/weights/2024-01-11-20-02-45/model_best.pth"
+  do
+    if [[ ! -e "$required_path" ]]; then
+      echo "Missing FoundationPose prerequisite: $required_path" >&2
+      exit 1
+    fi
+  done
+fi
 
 if [[ ! -S /tmp/.X11-unix/X0 || ! -r "$xauthority" ]]; then
   echo "FoundationPose rasterization requires the active X11 display and authority file." >&2

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import copy
+import hashlib
 import json
 import struct
 import tempfile
@@ -127,6 +129,107 @@ class ValidateIsaacExportTest(unittest.TestCase):
             frames_path.write_text("".join(json.dumps(frame) + "\n" for frame in frames), encoding="utf-8")
             errors = VALIDATOR.validate_sequence(self.root)
             self.assertTrue(any("strictly increasing" in error for error in errors))
+
+    def add_robot(self):
+        mesh_path = self.root / "robot_meshes" / "link6.obj"
+        mesh_path.parent.mkdir()
+        mesh_path.write_text("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n")
+        manifest = json.loads((self.root / "manifest.json").read_text())
+        manifest["robot_geometry"] = {
+            "version": 1, "units": "meter", "pose_convention": "T_world_link_origin",
+            "pose_source": "test robot state", "validation_mask_dir": "robot_masks",
+            "links": [{"name": "link6", "path": "robot_meshes/link6.obj",
+                       "sha256": hashlib.sha256(mesh_path.read_bytes()).hexdigest(),
+                       "vertex_count": 3, "triangle_count": 1}],
+        }
+        (self.root / "manifest.json").write_text(json.dumps(manifest))
+        frames = [json.loads(line) for line in (self.root / "frames.jsonl").read_text().splitlines()]
+        for frame in frames:
+            frame["T_world_robot_links"] = {"link6": copy.deepcopy(IDENTITY)}
+            write_png(self.root / "robot_masks" / f"{frame['frame_id']}.png", 2, 2, 8, 0)
+        self.write_frames(frames)
+        return manifest, frames
+
+    def write_frames(self, frames):
+        (self.root / "frames.jsonl").write_text("".join(json.dumps(frame) + "\n" for frame in frames))
+
+    def test_valid_robot_geometry(self):
+        self.add_robot()
+        self.assertEqual(VALIDATOR.validate_sequence(self.root), [])
+
+    def test_rejects_missing_robot_pose_and_extra_link(self):
+        _, frames = self.add_robot()
+        for poses in ({}, {"link6": IDENTITY, "unknown": IDENTITY}, None):
+            frames[0]["T_world_robot_links"] = poses
+            self.write_frames(frames)
+            self.assertTrue(any("exactly match" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_nonrigid_robot_pose(self):
+        _, frames = self.add_robot()
+        frames[0]["T_world_robot_links"]["link6"][0][0] = 2
+        self.write_frames(frames)
+        self.assertTrue(any("not orthonormal" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_robot_mesh_hash_mismatch(self):
+        self.add_robot()
+        with (self.root / "robot_meshes/link6.obj").open("a") as stream:
+            stream.write("# changed\n")
+        self.assertTrue(any("SHA-256 mismatch" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_invalid_robot_metadata(self):
+        original, _ = self.add_robot()
+        for mutation, expected in (({"version": 2}, "version"), ({"units": "mm"}, "units"),
+                                   ({"links": []}, "non-empty list"), ({"links": [None]}, "expected objects")):
+            manifest = copy.deepcopy(original)
+            manifest["robot_geometry"].update(mutation)
+            (self.root / "manifest.json").write_text(json.dumps(manifest))
+            self.assertTrue(any(expected in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_missing_robot_mesh(self):
+        self.add_robot()
+        (self.root / "robot_meshes/link6.obj").unlink()
+        self.assertTrue(any("missing mesh" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_duplicate_robot_links(self):
+        manifest, _ = self.add_robot()
+        manifest["robot_geometry"]["links"] *= 2
+        (self.root / "manifest.json").write_text(json.dumps(manifest))
+        self.assertTrue(any("duplicate link name" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_unsafe_robot_mesh_path(self):
+        manifest, _ = self.add_robot()
+        for path in ("../outside.obj", "/tmp/outside.obj"):
+            manifest["robot_geometry"]["links"][0]["path"] = path
+            (self.root / "manifest.json").write_text(json.dumps(manifest))
+            self.assertTrue(any("forbidden" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_symlink_escape(self):
+        manifest, _ = self.add_robot()
+        (self.root / "robot_meshes/escape.obj").symlink_to(self.root.parent / "outside.obj")
+        manifest["robot_geometry"]["links"][0]["path"] = "robot_meshes/escape.obj"
+        (self.root / "manifest.json").write_text(json.dumps(manifest))
+        self.assertTrue(any("outside sequence" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_invalid_robot_obj(self):
+        original, _ = self.add_robot()
+        path = self.root / "robot_meshes/link6.obj"
+        for content in ("v nan 0 0\nf 1 2 3\n", "v 0 0 0\nf 1 2 99\n", "v 0 0 0\nf 1 1 1\n"):
+            path.write_text(content)
+            manifest = copy.deepcopy(original)
+            manifest["robot_geometry"]["links"][0]["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+            (self.root / "manifest.json").write_text(json.dumps(manifest))
+            self.assertTrue(VALIDATOR.validate_sequence(self.root))
+
+    def test_rejects_missing_robot_audit_mask(self):
+        self.add_robot()
+        (self.root / "robot_masks/000001.png").unlink()
+        self.assertTrue(any("robot audit mask" in e for e in VALIDATOR.validate_sequence(self.root)))
+
+    def test_rejects_robot_poses_without_geometry(self):
+        manifest, _ = self.add_robot()
+        del manifest["robot_geometry"]
+        (self.root / "manifest.json").write_text(json.dumps(manifest))
+        self.assertTrue(any("require robot_geometry" in e for e in VALIDATOR.validate_sequence(self.root)))
 
 
 if __name__ == "__main__":
