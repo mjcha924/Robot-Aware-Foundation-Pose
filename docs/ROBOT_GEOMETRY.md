@@ -4,6 +4,9 @@ Updated: 2026-09-22 (Asia/Seoul)
 
 ## Scope
 
+This document records the geometry checkpoint at `e153272`. The subsequent
+filtering implementation is described in [CANDIDATE_FILTERING.md](CANDIDATE_FILTERING.md).
+
 This milestone exports OMY's rigid-link visual meshes and synchronized link
 poses, and checks their projection against Isaac's camera data. It prepares
 the geometry input for effector-aware candidate screening. **It does not yet

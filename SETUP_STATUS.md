@@ -15,7 +15,8 @@ Last updated: 2026-09-22 (Asia/Seoul)
 - About 281 GiB disk space and 31 GiB RAM were available
 - Both required FoundationPose checkpoint sets are downloaded and verified
 - The 737-frame `mustard0` RGB-D demo and textured mesh are installed locally
-- No end-effector-aware candidate-pruning method implemented
+- Opt-in robot-occlusion-aware registration filtering is implemented; default
+  inference remains unchanged. See `docs/CANDIDATE_FILTERING.md` for evaluation.
 - The official FoundationPose image is pulled and tagged `foundationpose:latest`
 - The pinned checkout's native `mycpp` extension is built
 - The unchanged pretrained model-based demo passed on all 737 frames
@@ -25,7 +26,8 @@ Last updated: 2026-09-22 (Asia/Seoul)
 - FoundationPose processed the ten-frame OMY capture successfully with mean
   errors of 8.12 mm translation and 1.20 degrees rotation against Isaac truth
 - A dependency-free pose evaluator reproduces those control metrics in both
-  camera and end-effector coordinates; all 34 offline unit tests pass
+  camera and end-effector coordinates; all 49 tests pass in the GPU environment
+  (40 pass locally without PyTorch; nine dependency-specific tests skip)
 - A 192-frame dynamic OMY control now passes motion and export validation,
   with six fully occluded frames. FoundationPose completes all frames: mean
   errors 12.347 mm / 4.343 degrees; maximum 106.435 mm / 34.207 degrees.
@@ -40,6 +42,11 @@ Last updated: 2026-09-22 (Asia/Seoul)
   (minimum IoU 0.98357; worst depth p95 error 0.477 mm). The unchanged estimator
   completes the new capture: overall mean 5.332 mm / 4.671 degrees; visible-area
   groups average 0.937 mm versus 36.098 mm translation error.
+- Candidate filtering completed 300 benchmark records across five methods and
+  a separate 192-frame filtered-registration/tracking integration run. EA and
+  original both succeed in 30/45 observable trials; EA median registration is
+  0.680 s versus 2.327 s. Geometry-only also gets 30/45 and random gets 31/45:
+  no robot-specific accuracy gain is established on this single sequence.
 
 ## Repository progress
 

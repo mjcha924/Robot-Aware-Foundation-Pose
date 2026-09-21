@@ -49,7 +49,18 @@ def main() -> int:
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--audit-robot-geometry", action="store_true",
                         help="Validate robot-only projection instead of running object pose inference.")
+    parser.add_argument("--candidate-filter", choices=("none", "random", "geometry", "effector"), default="none")
+    parser.add_argument("--filter-keep", type=int, default=64)
+    parser.add_argument("--screening-scale", type=int, default=4)
+    parser.add_argument("--filter-seed", type=int, default=0)
+    parser.add_argument("--benchmark-filtering", action="store_true", help="Run matched independent-registration trials.")
+    parser.add_argument("--trial-frames", default="0,48,72,84,90,96,99,100,101,102,103,106,108,109,110,112,118,132,168,191")
+    parser.add_argument("--trial-repeats", type=int, default=3)
     args = parser.parse_args()
+    if min(args.filter_keep, args.screening_scale, args.trial_repeats, args.est_refine_iter, args.track_refine_iter) < 1:
+        parser.error("counts, scales, and refinement iterations must be positive")
+    if args.audit_robot_geometry and args.benchmark_filtering:
+        parser.error("choose audit or filtering benchmark, not both")
 
     sequence = args.sequence.resolve()
     output = args.output.resolve()
@@ -63,6 +74,11 @@ def main() -> int:
         from audit_robot_geometry import audit
         manifest, frames = load_metadata(sequence)
         audit(sequence, output, manifest, frames)
+        return 0
+    if args.benchmark_filtering:
+        from benchmark_candidate_filtering import benchmark
+        manifest, frames = load_metadata(sequence)
+        benchmark(sequence, output, manifest, frames, args)
         return 0
 
     # Heavy imports stay below validation so malformed input fails quickly.
@@ -84,7 +100,13 @@ def main() -> int:
     to_origin, extents = trimesh.bounds.oriented_bounds(mesh)
     bbox = np.stack([-extents / 2, extents / 2], axis=0).reshape(2, 3)
 
-    estimator = FoundationPose(
+    estimator_class, filter_options = FoundationPose, {}
+    if args.candidate_filter != "none":
+        from foundationpose_adapter.filtered_estimator import FilteredFoundationPose
+        estimator_class = FilteredFoundationPose
+        filter_options = dict(filter_mode=args.candidate_filter, candidate_keep=args.filter_keep,
+                              render_scale=args.screening_scale)
+    estimator = estimator_class(
         model_pts=mesh.vertices,
         model_normals=mesh.vertex_normals,
         mesh=mesh,
@@ -93,7 +115,15 @@ def main() -> int:
         debug_dir=str(output),
         debug=0,
         glctx=dr.RasterizeCudaContext(),
+        **filter_options,
     )
+    if args.candidate_filter != "none":
+        estimator.selection_seed = args.filter_seed
+    if args.candidate_filter == "effector":
+        from urdf_render.robot_depth import RobotDepthRenderer
+        if "robot_geometry" not in manifest:
+            raise ValueError("effector filtering requires a robot-geometry export")
+        robot_renderer = RobotDepthRenderer(sequence, manifest["robot_geometry"])
     logging.info("estimator initialization done")
 
     results: list[dict] = []
@@ -111,6 +141,8 @@ def main() -> int:
             mask = cv2.imread(str(sequence / "masks" / f"{frame_id}.png"), cv2.IMREAD_UNCHANGED)
             if mask is None or not np.any(mask):
                 raise RuntimeError(f"initial object mask is empty: {frame_id}")
+            if args.candidate_filter == "effector":
+                estimator.set_robot_state(robot_renderer, frame["T_world_camera"], frame["T_world_robot_links"])
 
         torch.cuda.synchronize()
         inference_start = time.perf_counter()
@@ -150,6 +182,9 @@ def main() -> int:
             "candidate_count": len(estimator.rot_grid) if index == 0 else 1,
             "inference_s": inference_s,
         }
+        if index == 0 and args.candidate_filter != "none":
+            result["candidate_count"] = estimator.filter_trace["candidate_count"]
+            result["candidate_filter"] = estimator.filter_trace
         for key in ("visible_mask_pixels", "motion_progress"):
             if key in frame:
                 result[key] = frame[key]
@@ -183,6 +218,10 @@ def main() -> int:
         "frame_count": len(results),
         "est_refine_iter": args.est_refine_iter,
         "track_refine_iter": args.track_refine_iter,
+        "candidate_filter": args.candidate_filter,
+        "filter_keep": args.filter_keep,
+        "screening_scale": args.screening_scale,
+        "filter_seed": args.filter_seed,
         "foundationpose_commit": "a1b694b83e633c2cb6115b9063d940a687759392",
         "input_metadata_sha256": {
             name: hashlib.sha256((sequence / name).read_bytes()).hexdigest()

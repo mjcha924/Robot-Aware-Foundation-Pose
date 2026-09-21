@@ -5,18 +5,35 @@ Saved: 2026-09-22 (Asia/Seoul)
 ## Resume from GitHub
 
 Repository: `/home/mjcha/effector-aware-foundationpose`, branch `main`.
-This checkpoint completes robot-geometry export and projection validation on
-top of `65203c9` (the previous dynamic-control milestone). Use `git log` for
-the publication commit. No unfinished source changes are required to resume.
+This checkpoint adds opt-in candidate filtering on top of `e153272`, which
+completed robot-geometry export and projection validation. Use `git log` for
+this checkpoint's publication commit. No unfinished source changes are required
+to resume from GitHub.
 
-**Effector-aware candidate filtering is not implemented yet.** The reusable
-robot depth renderer and corrected-calibration control are ready for it.
+**Effector-aware registration filtering is implemented as an opt-in prototype.**
+Read [CANDIDATE_FILTERING.md](CANDIDATE_FILTERING.md) for method details,
+matched experiment commands, and limitations. Default inference and ordinary
+tracking remain unchanged; automatic recovery is not implemented.
 Read [ROBOT_GEOMETRY.md](ROBOT_GEOMETRY.md) for results, hashes, and complete
 capture/audit/inference commands. Raw simulator data, meshes, pretrained assets,
 and outputs are ignored by Git; a fresh machine must install prerequisites
 and regenerate the capture. The selected projection overlay is committed.
 
 ## Verified checkpoint
+
+- Filtering comparison: `outputs/ea_filter_comparison_20260922` contains all
+  300 trial records and the protocol/hash report. EA vs original: 30/45
+  observable successes for both, median registration 0.680 s vs 2.327 s.
+  Geometry-only also gets 30/45; random gets 31/45. Do not claim a robot-specific
+  accuracy gain. EA changes candidate sets on seven unique observed frames.
+- Normal filtered pipeline: `outputs/ea_filtered_sequence_20260922`, all 192
+  frames complete, mean error 5.233 mm / 4.745 degrees. Only registration is
+  filtered; tracking remains upstream. Treat this as an integration check.
+- All 49 tests pass in the GPU environment; 40 pass and nine skip in the
+  dependency-free local environment. Upstream remains unchanged. This checkpoint
+  includes the filtering implementation, matched benchmark, tests and handoff.
+
+Geometry/baseline checkpoint retained from `e153272`:
 
 - Unchanged FoundationPose submodule: `a1b694b83e633c2cb6115b9063d940a687759392`.
 - RTX 3070 / 8 GB, driver 580.178.04; validated Docker images remain
@@ -57,14 +74,13 @@ capture. Neither should substitute for the accepted geometry capture.
 1. Use `src/urdf_render/robot_depth.py` to render arm/wrist/finger occlusion from
    robot meshes and link poses. It takes no bottle ground truth or semantic
    robot masks; simulator robot masks are used only by the projection audit.
-2. Implement conservative candidate screening in our adapter, leaving upstream
-   untouched. Account for candidate bottle surfaces hidden behind the robot;
-   do not mistake missing visual evidence there for a bad pose.
-3. Add registration/recovery trials and compare original FoundationPose,
-   matched-count random candidates, geometry-only screening, and robot-aware
-   screening. Include geometry overhead, candidate retention, pose errors,
-   failures, and recovery latency. Test calibration perturbations and separate
-   tuning sequences from held-out evaluation.
+2. Extend evaluation of the implemented adapter on separate held-out scenes.
+   The matched independent-registration benchmark already compares original,
+   random, geometry-only, effector-aware and 10 mm perturbed robot projection.
+   Include all rendering overhead and weak-evidence fallbacks in comparisons.
+3. Establish whether robot context adds benefit beyond geometry-only screening;
+   do not equate fewer candidates with an accuracy improvement. Add explicit
+   temporal recovery trials, real segmentation, and broader calibration noise.
 
 The gripper occludes a **free bottle**, not a rigidly grasped one. A constant
 object-to-effector prior would be invalid. Object ground truth stays

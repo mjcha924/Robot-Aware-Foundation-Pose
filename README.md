@@ -30,8 +30,7 @@ show the estimated 6-DoF bottle pose.
 The **192-frame corrected-calibration control** includes six completely hidden
 bottle frames. Mean translation error rises from 0.94 mm with at least half
 the reference visible area to 36.10 mm below that level, peaking at 101.66 mm.
-The unchanged estimator completed all frames; effector-aware candidate pruning
-is the next experiment, not yet implemented.
+The unchanged estimator completed all frames and remains the control.
 
 **September 22 checkpoint:** robot-link geometry export and a GPU projection
 audit now pass on all 192 frames and 11 links (minimum visible robot IoU
@@ -41,6 +40,17 @@ correction, not an effector-aware accuracy improvement. See
 [`docs/ROBOT_GEOMETRY.md`](docs/ROBOT_GEOMETRY.md) for results and reproduction.
 The [earlier dynamic control](docs/ISAAC_DYNAMIC_CONTROL.md) is retained with
 its calibration caveat.
+
+An opt-in **effector-aware registration filter** now screens the original 252
+pose candidates using predicted robot occlusion, visible object shape, and
+depth. It normally retains 64 candidates, with a full-search fallback for weak
+evidence. Tracking is unchanged and the default remains unfiltered. See
+[CANDIDATE_FILTERING.md](docs/CANDIDATE_FILTERING.md) for commands, matched
+controls, and experimental limitations.
+On the initial single-sequence registration test, effector-aware filtering
+matched the full baseline's 30/45 successes at 0.68 s versus 2.33 s median
+registration time. Geometry-only matched that success count and random selection
+scored 31/45, so an accuracy benefit specific to robot awareness is not established.
 
 ## Repository layout
 

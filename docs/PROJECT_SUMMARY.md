@@ -4,6 +4,21 @@ Last updated: 2026-09-22 (Asia/Seoul)
 
 ## Latest milestone
 
+An opt-in effector-aware candidate filter is now implemented outside upstream.
+It screens registration hypotheses using robot occlusion and visible shape/depth,
+usually retaining 64 of 252 candidates. A matched experiment compares original,
+random, geometry-only, robot-aware, and calibration-perturbed variants. See
+[CANDIDATE_FILTERING.md](CANDIDATE_FILTERING.md). This is an experimental
+registration change, not automatic recovery or altered tracking.
+
+Completed: 300 trial records (20 frame indices x three repeats x five methods),
+plus a full 192-frame integration run. EA matches original at 30/45 observable
+successes, with 0.680 s vs 2.327 s median registration time including filtering.
+Geometry-only also gets 30/45 and random 31/45; robot-specific accuracy benefit
+is not established. All 49 tests pass in the FoundationPose GPU environment.
+
+## Geometry checkpoint (`e153272`)
+
 Robot-link geometry export, a strict contract extension, and a GPU projection
 audit are now implemented. The audit caught a cached camera pose after reset
 randomization; the capture adapter now refreshes camera poses on every frame.
