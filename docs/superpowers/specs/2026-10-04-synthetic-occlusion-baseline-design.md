@@ -62,20 +62,23 @@ outputs/occlusion_baseline/<run_id>/    poses.jsonl results.csv summary.json fig
 
 ```python
 visible_fraction(obj_mask, occ) -> float
-make_block(obj_mask, target_visible, side, margin_px=8, tol=0.005) -> (occ, achieved)
+make_block(obj_mask, target_visible, side, margin_px=8, tol=0.01) -> (occ, achieved)
 apply_occlusion(rgb, depth, occ, color=(0,0,0), depth_mode="zero"|"front",
-                front_offset_m=0.10, obj_mask=None) -> (rgb, depth)
+                front_offset_mm=100, obj_mask=None) -> (rgb, depth)   # depth is uint16 millimetres
 select_frames(mask_areas, n, ...) -> [frame_id]
 add_s(est, gt, model_pts); add(est, gt, model_pts, sym_tfs)
 ```
 
-- `make_block`: an axis-aligned rectangle growing from one side (top/bottom/left/right) of the
-  object's bbox, extending `margin_px` beyond the object. Its size is found by bisection so the
-  fraction of object pixels still visible is within `tol` of the target. Counting uses object
-  pixels only. Direction and seed are fixed per (frame, level); within one frame the same side is
+- `make_block`: an axis-aligned rectangle entering from one side (top/bottom/left/right) of the
+  object's bbox, spanning the whole bbox plus `margin_px` in the other direction. Because it spans
+  the full box, the hidden object pixels depend only on how far it reaches in, so the reach is
+  chosen from the cumulative per-column (per-row) object pixel counts (no bisection). Counting
+  uses object pixels only. Granularity is one column/row of the mask: on the 375 cracker-box masks
+  (4 sides x 9 targets) the worst error is 1.26%, 2.8% of cases exceed 1% and none exceed 2%, so the
+  scene script uses `tol=0.02` and always records the measured `achieved`. Direction and seed are fixed per (frame, level); within one frame the same side is
   used for all levels so occlusion grows monotonically.
 - `apply_occlusion`: RGB inside the block is set to `color`. Depth mode `zero` sets depth to 0;
-  mode `front` sets it to (median object depth - `front_offset_m`).
+  mode `front` sets it to (median object depth - `front_offset_mm`).
 - `register` receives the **visible** mask: `gt_mask & ~occ`. A full-GT-mask variant is a later
   ablation to separate "bad initial translation" from "bad network input".
 - Colour other than black (grey, copied background texture) is an option for a later ablation, not
