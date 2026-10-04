@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Write occluded copies of a YCBInEOAT scene, one scene folder per visibility level.
+"""Write occluded copies of a YCBInEOAT scene, one scene folder per occlusion level.
 
-Each <out>/vNNN/ has the same layout run_demo.py reads (rgb/, depth/, masks/, cam_K.txt)
-plus meta.json with the exact visible fraction per frame. masks/ holds the *visible*
-object mask. <out>/review/<frame>.png is a contact sheet over the levels for inspection.
+A level is the percentage of the frame's object mask that the block hides: v000 is the
+original (nothing added), v090 hides 90%. Each <out>/vNNN/ has the same layout run_demo.py
+reads (rgb/, depth/, masks/, cam_K.txt) plus meta.json with the exact hidden fraction per
+frame. masks/ holds the *visible* object mask. <out>/review/<frame>.png is a contact sheet
+over the levels for inspection.
 """
 
 import argparse
@@ -31,8 +33,8 @@ def parse_args():
     p.add_argument("--n", type=int, default=100, help="number of frames")
     p.add_argument("--strategy", choices=("uniform", "largest"), default="uniform")
     p.add_argument("--min-area", type=int, default=0, help="drop frames whose object mask is smaller (px)")
-    p.add_argument("--levels", default="100,90,80,70,60,50,40,30,20,10",
-                   help="visible percentages of the object mask, comma separated")
+    p.add_argument("--levels", default="0,10,20,30,40,50,60,70,80,90",
+                   help="occlusion percentages (share of the object mask hidden), comma separated")
     p.add_argument("--depth-mode", choices=("zero", "front"), default="zero")
     p.add_argument("--front-offset-mm", type=int, default=100)
     p.add_argument("--color", default="0,0,0", help="block RGB colour")
@@ -112,18 +114,19 @@ def main():
         ref_mm = int(np.median(depth[obj & (depth > 0)]))
         top, bottom = [], []
         for level in levels:
-            result = build_level(rgb, depth, obj, level / 100, side, color=color,
+            result = build_level(rgb, depth, obj, 1 - level / 100, side, color=color,
                                  depth_mode=args.depth_mode, front_offset_mm=args.front_offset_mm,
                                  tol=args.tol)
             d = args.out / f"v{level:03d}"
             cv2.imwrite(str(d / "rgb" / f"{frame_id}.png"), cv2.cvtColor(result["rgb"], cv2.COLOR_RGB2BGR))
             cv2.imwrite(str(d / "depth" / f"{frame_id}.png"), result["depth"])
             cv2.imwrite(str(d / "masks" / f"{frame_id}.png"), result["visible_mask"].astype(np.uint8))
+            hidden = 1 - result["achieved"]
             meta[level]["frames"][frame_id] = {
-                "side": side, "target": result["target"], "achieved": result["achieved"],
+                "side": side, "target_occluded": level / 100, "achieved_occluded": hidden,
                 "object_px": int(obj.sum()), "visible_px": int(result["visible_mask"].sum()),
             }
-            label = f"{level}% ({result['achieved'] * 100:.1f})"
+            label = f"occ {level}% ({hidden * 100:.1f})"
             top.append(cell(result["rgb"], window, result["visible_mask"], label))
             bottom.append(cell(depth_vis(result["depth"], ref_mm), window, result["visible_mask"], side))
         sheet = np.vstack([np.hstack(top), np.hstack(bottom)])
@@ -132,7 +135,7 @@ def main():
 
     for level in levels:
         (args.out / f"v{level:03d}" / "meta.json").write_text(json.dumps({
-            "level_percent": level, "depth_mode": args.depth_mode, "color": color,
+            "occlusion_percent": level, "depth_mode": args.depth_mode, "color": color,
             "front_offset_mm": args.front_offset_mm, "tol": args.tol, **meta[level],
         }, indent=1))
 
