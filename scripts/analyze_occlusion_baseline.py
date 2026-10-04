@@ -27,6 +27,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
+from pose_eval.gt import gt_pose_paths
 from pose_eval.metrics import model_diameter
 from pose_eval.report import FRACTIONS, evaluate_records, level_table
 
@@ -41,7 +42,8 @@ def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--run", action="append", required=True, metavar="LABEL=POSES.jsonl")
     p.add_argument("--model-points", type=Path, default=ROOT / "data/models/CADmodels/003_cracker_box/points.xyz")
-    p.add_argument("--gt-dir", type=Path, default=ROOT / "data/ycbineoat/cracker_box_reorient/annotated_poses")
+    p.add_argument("--scene", type=Path, default=ROOT / "data/ycbineoat/cracker_box_reorient",
+                   help="original YCBInEOAT scene (for ground-truth poses)")
     p.add_argument("--out", type=Path, default=None)
     return p.parse_args()
 
@@ -230,10 +232,11 @@ def main():
     points = np.loadtxt(args.model_points)[:, :3]
     diameter = model_diameter(points)
 
+    gt_files = gt_pose_paths(args.scene)
     tables, rows_by_run = {}, {}
     for label, path in runs.items():
         records = read_records(path)
-        gt = {r["frame_id"]: np.loadtxt(args.gt_dir / f"{r['frame_id']}.txt").reshape(4, 4) for r in records}
+        gt = {r["frame_id"]: np.loadtxt(gt_files[r["frame_id"]]).reshape(4, 4) for r in records}
         rows = evaluate_records(records, gt, points)
         tables[label], rows_by_run[label] = level_table(rows, diameter), rows
         print_table(label, tables[label], diameter)

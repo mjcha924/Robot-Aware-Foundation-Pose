@@ -12,12 +12,15 @@ import sys
 import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from foundationpose_adapter.independent_register import build_estimator, make_reader, register_frame
+from occlusion.occluder import make_block
+from occlusion.scene import choose_side
 
 
 def parse_args():
@@ -28,7 +31,25 @@ def parse_args():
     p.add_argument("--limit-frames", type=int, default=0, help="use N evenly spaced frames of the selection (0 = all)")
     p.add_argument("--est-refine-iter", type=int, default=5)
     p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--oracle", action="store_true",
+                   help="blank the (known) occluder region on both sides of the network comparison")
+    p.add_argument("--source-scene", type=Path, default=ROOT / "data/ycbineoat/cracker_box_reorient",
+                   help="original scene whose gt_mask the blocks were built on (oracle mode)")
+    p.add_argument("--seed", type=int, default=0, help="seed the scene was generated with (oracle mode)")
+    p.add_argument("--tol", type=float, default=0.02, help="tolerance the scene was generated with (oracle mode)")
     return p.parse_args()
+
+
+def oracle_block(args, scene, level, frame_id):
+    """Rebuild the occluder of a generated frame and check it reproduces the saved visible mask."""
+    obj = cv2.imread(str(args.source_scene / "gt_mask" / f"{frame_id}.png"), cv2.IMREAD_UNCHANGED) > 0
+    occ = np.zeros_like(obj)
+    if level > 0:
+        occ, _ = make_block(obj, 1 - level / 100, choose_side(frame_id, args.seed), tol=args.tol)
+    saved = cv2.imread(str(scene / "masks" / f"{frame_id}.png"), cv2.IMREAD_UNCHANGED) > 0
+    if not np.array_equal(obj & ~occ, saved):
+        raise SystemExit(f"rebuilt occluder does not match the saved mask for level {level} frame {frame_id}")
+    return occ
 
 
 def pick_frames(frame_ids, limit):
@@ -52,6 +73,12 @@ def main():
             done.add((record["level"], record["frame_id"]))
 
     estimator, _ = build_estimator(str(args.mesh_file))
+    holder = None
+    if args.oracle:
+        import torch
+        from foundationpose_adapter.oracle_occlusion import enable_oracle
+
+        holder = enable_oracle(estimator)
     total = len(levels) * len(frame_ids)
     count = 0
     with results.open("a") as sink:
@@ -69,6 +96,9 @@ def main():
                           "achieved_occluded": info["achieved_occluded"],
                           "visible_px": info["visible_px"], "object_px": info["object_px"],
                           "depth_mode": meta["depth_mode"], "pose": None, "seconds": None, "error": None}
+                if holder is not None:
+                    holder.occ = torch.as_tensor(oracle_block(args, scene, level, frame_id), device="cuda")
+                    record["oracle"] = True
                 start = time.perf_counter()
                 try:
                     record["pose"] = np.asarray(register_frame(
