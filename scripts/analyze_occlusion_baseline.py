@@ -67,13 +67,13 @@ def fmt(value, spec="6.1f"):
 def print_table(label, table, diameter_m):
     print(f"\n=== {label}  (model diameter {diameter_m * 1000:.1f} mm; "
           f"success = ADD-S < {', '.join(f'{f:.0%}={f * diameter_m * 1000:.1f}mm' for f in FRACTIONS)}) ===")
-    print("occ%  hidden  n  fail | ADD-S mm: mean median  p90 | success 5%   10% [95% CI]    20% | rot>90  shift mm")
+    print("occ%  hidden  n  fail | ADD-S mm: mean median  p90 | success 5%   10% [95% CI]    20% | rot>90  shift mm  AUC")
     for t in table:
         s = t["success"]
         print(f"{t['level']:>3}  {t['hidden_mean'] * 100:5.1f} {t['n']:>3} {t['n_failed_call']:>4} | "
               f"{fmt(t['adds_mean_mm'], '14.1f')} {fmt(t['adds_median_mm'], '6.1f')} {fmt(t['adds_p90_mm'], '5.1f')} | "
               f"{s[0.05][0]:8.0%} {s[0.10][0]:5.0%} [{s[0.10][1]:.0%}-{s[0.10][2]:.0%}] {s[0.20][0]:6.0%} | "
-              f"{t['rot_over_90']:>5}  {fmt(t['pose_shift_mean_mm'], '7.1f')}")
+              f"{t['rot_over_90']:>5}  {fmt(t['pose_shift_mean_mm'], '7.1f')}  {t['adds_auc']:.3f}")
 
 
 def print_comparison(tables):
@@ -99,13 +99,13 @@ def write_csvs(out, label, rows, table):
     with (out / f"{label}_levels.csv").open("w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["occ_level", "hidden_mean", "n", "n_failed_call", "adds_mean_mm", "adds_median_mm",
-                         "adds_p90_mm", "translation_mean_mm", "rot_over_90", "pose_shift_mean_mm"]
+                         "adds_p90_mm", "translation_mean_mm", "rot_over_90", "pose_shift_mean_mm", "adds_auc_10cm"]
                         + [f"success_{int(f * 100)}pct" for f in FRACTIONS]
                         + [f"success_{int(f * 100)}pct_{b}" for f in FRACTIONS for b in ("lo", "hi")])
         for t in table:
             writer.writerow([t["level"], t["hidden_mean"], t["n"], t["n_failed_call"], t["adds_mean_mm"],
                              t["adds_median_mm"], t["adds_p90_mm"], t["translation_mean_mm"], t["rot_over_90"],
-                             t["pose_shift_mean_mm"]] + [t["success"][f][0] for f in FRACTIONS]
+                             t["pose_shift_mean_mm"], t["adds_auc"]] + [t["success"][f][0] for f in FRACTIONS]
                             + [t["success"][f][i] for f in FRACTIONS for i in (1, 2)])
 
 
@@ -159,6 +159,20 @@ def plot_thresholds(out, tables):
         ax.legend(frameon=False, fontsize=9, loc="lower left")
     fig.tight_layout()
     fig.savefig(out / "success_threshold_sensitivity.png", dpi=150)
+    plt.close(fig)
+
+
+def plot_auc(out, tables):
+    fig, ax = new_figure(figsize=(7.5, 4.5))
+    for i, (label, table) in enumerate(tables.items()):
+        ax.plot([t["level"] for t in table], [t["adds_auc"] for t in table], color=COLORS[i],
+                marker=MARKERS[i], markersize=6, linewidth=2, label=label)
+    style(ax, "occlusion (% of the object hidden)", "ADD-S AUC (0-100 mm)", "ADD-S AUC vs occlusion")
+    ax.set_xticks(sorted({t["level"] for tb in tables.values() for t in tb}))
+    ax.legend(frameon=False, fontsize=9, loc="lower left")
+    fig.text(0.01, 0.01, "AUC of accuracy vs threshold over 0-100 mm; a failed call counts as wrong", fontsize=8, color=MUTED)
+    fig.tight_layout()
+    fig.savefig(out / "auc_vs_occlusion.png", dpi=150)
     plt.close(fig)
 
 
@@ -246,6 +260,7 @@ def main():
     plot_success(out, tables)
     plot_thresholds(out, tables)
     plot_error(out, tables)
+    plot_auc(out, tables)
     plot_sides(out, rows_by_run, diameter)
     plot_scatter(out, rows_by_run, diameter)
     print(f"\nwrote tables and figures to {out}")

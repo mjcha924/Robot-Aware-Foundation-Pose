@@ -8,7 +8,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from pose_eval.report import evaluate_records, level_table, wilson_interval
+from pose_eval.report import adds_auc, evaluate_records, level_table, wilson_interval
 
 
 def pose_list(tx=0.0, ty=0.0, tz=0.5, rot_z_deg=0.0):
@@ -116,3 +116,17 @@ class LevelTableTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AddsAucTests(unittest.TestCase):
+    def test_perfect_estimates_give_one(self):
+        self.assertAlmostEqual(adds_auc([0.0, 0.0], 2), 1.0, places=2)
+
+    def test_error_at_or_beyond_the_range_gives_zero(self):
+        self.assertAlmostEqual(adds_auc([100.0, 250.0], 2), 0.0, places=6)
+
+    def test_single_error_at_half_range(self):
+        self.assertAlmostEqual(adds_auc([50.0], 1), 0.5, places=3)
+
+    def test_failed_calls_count_as_wrong(self):
+        self.assertAlmostEqual(adds_auc([0.0], 2), 0.5, places=3)

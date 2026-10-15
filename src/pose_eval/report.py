@@ -22,6 +22,22 @@ def wilson_interval(successes, n, z=1.96):
     return max(0.0, min(centre - half, p)), min(1.0, max(centre + half, p))
 
 
+def adds_auc(errors_mm, n_total, max_mm=100.0, steps=1000):
+    """Area under the accuracy-vs-threshold curve (PoseCNN/FoundationPose style), in [0, 1].
+
+    Accuracy at threshold t is the share of all `n_total` trials with error < t, so a failed
+    register call (no error value) never counts as correct. The curve is integrated over
+    t in [0, max_mm] and divided by max_mm.
+    """
+    if n_total <= 0:
+        raise ValueError("need at least one trial")
+    errors = np.sort(np.asarray(errors_mm, dtype=float))
+    thresholds = np.linspace(0.0, max_mm, steps + 1)
+    accuracy = np.searchsorted(errors, thresholds, side="left") / n_total
+    area = float(np.sum((accuracy[1:] + accuracy[:-1]) / 2 * np.diff(thresholds)))
+    return area / max_mm
+
+
 def evaluate_records(records, gt_poses, points):
     """One row per record: errors against ground truth and the shift from that frame's level-0 pose.
 
@@ -74,6 +90,7 @@ def level_table(rows, diameter_m, fractions=FRACTIONS):
             "translation_mean_mm": stat(np.mean, [r["translation_mm"] for r in good]),
             "rot_over_90": int(sum(r["rotation_deg"] > 90 for r in good)),
             "pose_shift_mean_mm": stat(np.mean, shifts),
+            "adds_auc": adds_auc(adds, len(group)),
             "success": success,
         })
     return table
