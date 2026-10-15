@@ -20,6 +20,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from occlusion.occluder import SIDES
 from occlusion.scene import build_level, choose_side
 from occlusion.select import select_frames
 
@@ -39,6 +40,8 @@ def parse_args():
     p.add_argument("--front-offset-mm", type=int, default=100)
     p.add_argument("--color", default="0,0,0", help="block RGB colour")
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--side", choices=SIDES, default=None,
+                   help="force every frame's block to enter from this side (default: seeded per frame)")
     p.add_argument("--tol", type=float, default=0.02)
     p.add_argument("--force", action="store_true", help="replace an existing output folder")
     return p.parse_args()
@@ -103,13 +106,13 @@ def main():
     area_of = dict(areas)
     (args.out / "selection.json").write_text(json.dumps({
         "scene": str(scene), "strategy": args.strategy, "min_area": args.min_area, "n": args.n,
-        "seed": args.seed, "frames": [{"frame_id": f, "mask_area_px": area_of[f]} for f in chosen],
+        "seed": args.seed, "side": args.side, "frames": [{"frame_id": f, "mask_area_px": area_of[f]} for f in chosen],
     }, indent=1))
 
     meta = {level: {"frames": {}} for level in levels}
     for index, frame_id in enumerate(chosen):
         rgb, depth, obj = read_frame(scene, frame_id)
-        side = choose_side(frame_id, args.seed)
+        side = args.side or choose_side(frame_id, args.seed)
         window = crop_window(obj, obj.shape)
         ref_mm = int(np.median(depth[obj & (depth > 0)]))
         top, bottom = [], []
