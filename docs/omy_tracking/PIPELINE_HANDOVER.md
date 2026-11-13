@@ -1,5 +1,7 @@
 # OMY pilot pipeline handover
 
+Resuming after logout? Start with [SESSION_CHECKPOINT.md](SESSION_CHECKPOINT.md).
+
 ## Delivered result
 
 The pilot contains **45 accepted sequences / 11,999 frames**, with 36 training

@@ -640,3 +640,16 @@ Added `PIPELINE_HANDOVER.md`, original-frame grasp/release GIFs, a measured
 occlusion figure, compact cohort/reader/hold audits, and dataset checksums for
 GitHub publication. The full dataset remains at the documented local path and
 is excluded by the existing outputs ignore rule. Capture acceptance is unchanged.
+
+
+### 2026-11-14 — Published pilot and Codex logout checkpoint
+
+Pilot code, reports, checksums, and visuals were published as `beee022` on
+`feature/omy-tracking-dataset`, with an exact tree match to the original local
+commits (preserved under `archive/omy-pilot-local-67dad8b`). Added
+[SESSION_CHECKPOINT.md](SESSION_CHECKPOINT.md) for resuming after Codex logout.
+The full dataset and representative MP4 are still local. GitHub Release assets
+were recommended for distribution; packaging/upload has not begun. Clarified
+that the pilot is 3 objects × 3 tasks × 5 variants, while each GIF shows three
+clips and the MP4 shows nine. Partner loading and FoundationPose initialization
+remain unverified. No new simulation or expansion was started.
