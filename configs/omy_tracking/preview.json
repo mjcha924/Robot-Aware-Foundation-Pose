@@ -1,0 +1,21 @@
+{
+  "python": "/home/a09/robotics/isaaclab-so101/examples/isaaclab/.venv/bin/python",
+  "robot_usd": "/home/a09/robotics/cyclo_lab/source/cyclo_lab/data/robots/OMY/OMY.usd",
+  "environment_usd": null,
+  "purpose": "Static layout inspection only; not a physics-validated dataset scene",
+  "target_usd": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Props/YCB/Axis_Aligned/009_gelatin_box.usd",
+  "background": {
+    "floor_color": [
+      0.24,
+      0.25,
+      0.26
+    ],
+    "wall_color": [
+      0.7,
+      0.68,
+      0.64
+    ],
+    "floor_roughness": 0.72,
+    "wall_roughness": 0.9
+  }
+}

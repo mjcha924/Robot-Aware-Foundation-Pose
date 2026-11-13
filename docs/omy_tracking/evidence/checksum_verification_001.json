@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "command": "sha256sum -c accepted_checksums.sha256 --quiet",
+  "exit_code": 0,
+  "entries": 37654,
+  "checksum_list_sha256": "ee0dff5c1d80c3e736a2e335e1ce0623456e3ba153835811a5de40b7ffbb490e",
+  "verified_at_utc": "2026-11-13T14:37:58.876466+00:00"
+}

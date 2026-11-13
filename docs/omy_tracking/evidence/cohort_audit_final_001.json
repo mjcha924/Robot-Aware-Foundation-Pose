@@ -1,0 +1,551 @@
+{
+  "passed": true,
+  "accepted_count": 45,
+  "required": 45,
+  "gates_sha256": "12279e0adcf961569c151f682156db20c80d11739c8ed7b961b6c29b1eafbc30",
+  "postflight_gates_sha256": "68e31026cdb8f0f05aeec97707fe25118605b85b88a858635534e5f40ca16513",
+  "failures": [],
+  "sequences": [
+    {
+      "episode": "asymmetric_A_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "asymmetric_noncontact_00",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_A_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "asymmetric_noncontact_01",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_A_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "asymmetric_noncontact_02",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_A_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "asymmetric_noncontact_03",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_A_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "asymmetric_noncontact_04",
+      "split": "validation"
+    },
+    {
+      "episode": "asymmetric_B_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 1.2706096909386247e-06,
+      "joint_limit_rows": 301,
+      "parent_group": "asymmetric_manipulation_00",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_B_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 1.3695728698793347e-07,
+      "joint_limit_rows": 301,
+      "parent_group": "asymmetric_manipulation_01",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_B_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 1.6275390676600068e-06,
+      "joint_limit_rows": 301,
+      "parent_group": "asymmetric_manipulation_02",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_B_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 2.6784201777917474e-06,
+      "joint_limit_rows": 301,
+      "parent_group": "asymmetric_manipulation_03",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_B_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 2.801481328350633e-07,
+      "joint_limit_rows": 301,
+      "parent_group": "asymmetric_manipulation_04",
+      "split": "validation"
+    },
+    {
+      "episode": "asymmetric_C_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 275,
+        "validation/geometry_overlay.mp4": 275
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 276,
+      "parent_group": "asymmetric_releasefix_00_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_C_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 275,
+        "validation/geometry_overlay.mp4": 275
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 276,
+      "parent_group": "asymmetric_releasefix_01_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_C_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 274,
+        "validation/geometry_overlay.mp4": 274
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 275,
+      "parent_group": "asymmetric_releasefix_02_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_C_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 272,
+        "validation/geometry_overlay.mp4": 272
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 273,
+      "parent_group": "asymmetric_releasefix_03_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "asymmetric_C_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 267,
+        "validation/geometry_overlay.mp4": 267
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 268,
+      "parent_group": "asymmetric_releasefix_04_attempt_001",
+      "split": "validation"
+    },
+    {
+      "episode": "box_A_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "box_noncontact_00",
+      "split": "train"
+    },
+    {
+      "episode": "box_A_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "box_noncontact_01",
+      "split": "train"
+    },
+    {
+      "episode": "box_A_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "box_noncontact_02",
+      "split": "train"
+    },
+    {
+      "episode": "box_A_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "box_noncontact_03",
+      "split": "train"
+    },
+    {
+      "episode": "box_A_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "box_noncontact_04",
+      "split": "validation"
+    },
+    {
+      "episode": "box_B_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "box_manipulation_00",
+      "split": "train"
+    },
+    {
+      "episode": "box_B_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "box_manipulation_01",
+      "split": "train"
+    },
+    {
+      "episode": "box_B_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "box_manipulation_02",
+      "split": "train"
+    },
+    {
+      "episode": "box_B_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 2.6828392539653134e-08,
+      "joint_limit_rows": 301,
+      "parent_group": "box_manipulation_03",
+      "split": "train"
+    },
+    {
+      "episode": "box_B_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "box_manipulation_04",
+      "split": "validation"
+    },
+    {
+      "episode": "box_C_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 257,
+        "validation/geometry_overlay.mp4": 257
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 258,
+      "parent_group": "box_manipulation_00",
+      "split": "train"
+    },
+    {
+      "episode": "box_C_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 256,
+        "validation/geometry_overlay.mp4": 256
+      },
+      "joint_limit_maximum_excess_rad": 1.9365154871765072e-07,
+      "joint_limit_rows": 257,
+      "parent_group": "box_manipulation_01",
+      "split": "train"
+    },
+    {
+      "episode": "box_C_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 249,
+        "validation/geometry_overlay.mp4": 249
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 250,
+      "parent_group": "box_manipulation_02",
+      "split": "train"
+    },
+    {
+      "episode": "box_C_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 245,
+        "validation/geometry_overlay.mp4": 245
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 246,
+      "parent_group": "box_manipulation_03",
+      "split": "train"
+    },
+    {
+      "episode": "box_C_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 243,
+        "validation/geometry_overlay.mp4": 243
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 244,
+      "parent_group": "box_manipulation_04",
+      "split": "validation"
+    },
+    {
+      "episode": "cylinder_A_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "cylinder_noncontact_00",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_A_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "cylinder_noncontact_01",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_A_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "cylinder_noncontact_02",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_A_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "cylinder_noncontact_03",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_A_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 240,
+        "validation/geometry_overlay.mp4": 240
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 241,
+      "parent_group": "cylinder_noncontact_04",
+      "split": "validation"
+    },
+    {
+      "episode": "cylinder_B_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "cylinder_manipulation_00",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_B_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "cylinder_manipulation_01",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_B_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "cylinder_manipulation_02",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_B_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "cylinder_manipulation_03",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_B_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 300,
+        "validation/geometry_overlay.mp4": 300
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 301,
+      "parent_group": "cylinder_manipulation_04",
+      "split": "validation"
+    },
+    {
+      "episode": "cylinder_C_00",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 260,
+        "validation/geometry_overlay.mp4": 260
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 261,
+      "parent_group": "cylinder_releasefix_00_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_C_01",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 260,
+        "validation/geometry_overlay.mp4": 260
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 261,
+      "parent_group": "cylinder_releasefix_01_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_C_02",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 259,
+        "validation/geometry_overlay.mp4": 259
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 260,
+      "parent_group": "cylinder_releasefix_02_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_C_03",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 255,
+        "validation/geometry_overlay.mp4": 255
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 256,
+      "parent_group": "cylinder_releasefix_03_attempt_001",
+      "split": "train"
+    },
+    {
+      "episode": "cylinder_C_04",
+      "passed": true,
+      "video_frames": {
+        "review.mp4": 252,
+        "validation/geometry_overlay.mp4": 252
+      },
+      "joint_limit_maximum_excess_rad": 0.0,
+      "joint_limit_rows": 253,
+      "parent_group": "cylinder_releasefix_04_attempt_001",
+      "split": "validation"
+    }
+  ],
+  "note": "Capture/geometry acceptance only; FoundationPose initialization and learned tracking accuracy are not measured."
+}

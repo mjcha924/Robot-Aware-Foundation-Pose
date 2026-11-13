@@ -1,0 +1,7 @@
+{
+  "decision": "waived_by_user",
+  "user_statement": "proceed",
+  "context": "User answered the explicit choice to proceed with the 45 while partner format review is handled separately. Technical gates remain required.",
+  "recorded_at": "2026-11-13T12:48:36.389208+00:00",
+  "partner_load_confirmed": false
+}

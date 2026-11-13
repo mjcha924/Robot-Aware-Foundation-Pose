@@ -1,0 +1,184 @@
+{
+  "status": "ready_for_review_gated_pilot",
+  "scene": "outputs/omy_workstation_preview_007/workstation.usda",
+  "python": "/home/a09/robotics/isaaclab-so101/examples/isaaclab/.venv/bin/python",
+  "output_root": "outputs/omy_pilot",
+  "capture_hz": 30,
+  "physics_hz": 120,
+  "objects": {
+    "box": {
+      "asset": "009_gelatin_box.usd",
+      "model": "outputs/omy_target_model_001",
+      "mass_kg": 0.1,
+      "upright_axis": "Y",
+      "upright_angle_deg": 90,
+      "target_yaw_deg": 0,
+      "grasp_height_m": 1.075,
+      "grasp_offset_xy_m": [
+        0,
+        0
+      ],
+      "gripper_close_rad": 0.9,
+      "collision": "convexHull",
+      "rest_root_z_m": 1.0383251905,
+      "lift_distance_m": 0.12,
+      "model_audit": "outputs/omy_box_model_render_002"
+    },
+    "cylinder": {
+      "asset": "040_large_marker.usd",
+      "model": "outputs/omy_marker_model_001",
+      "mass_kg": 0.03,
+      "upright_axis": "X",
+      "upright_angle_deg": 0,
+      "target_yaw_deg": 0,
+      "grasp_height_m": 1.027,
+      "grasp_offset_xy_m": [
+        0,
+        0
+      ],
+      "gripper_close_rad": 1.1,
+      "collision": "convexHull",
+      "rest_root_z_m": 1.00325,
+      "lift_distance_m": 0.12,
+      "model_audit": "outputs/omy_marker_model_render_002"
+    },
+    "asymmetric": {
+      "asset": "011_banana.usd",
+      "model": "outputs/omy_banana_model_001",
+      "mass_kg": 0.12,
+      "upright_axis": "X",
+      "upright_angle_deg": 90,
+      "target_yaw_deg": 90,
+      "grasp_height_m": 1.03,
+      "grasp_offset_xy_m": [
+        -0.018,
+        0
+      ],
+      "gripper_close_rad": 0.8,
+      "collision": "convexDecomposition",
+      "rest_root_z_m": 1.0122485161,
+      "lift_distance_m": 0.16,
+      "model_audit": "outputs/omy_banana_model_render_002",
+      "variant_overrides": {
+        "1": {
+          "grasp_yaw_deg": 0,
+          "reason": "Keep the arm clear of the object before grasp; target yaw remains 86 degrees. Validated in outputs/omy_banana_retry_002."
+        }
+      }
+    }
+  },
+  "variants": [
+    {
+      "id": 0,
+      "target_xy_m": [
+        0.22,
+        -0.16
+      ],
+      "yaw_delta_deg": 0,
+      "carry_xy_m": [
+        0.05,
+        0.025
+      ],
+      "carry_yaw_deg": -45,
+      "split": "train",
+      "seed": 4100
+    },
+    {
+      "id": 1,
+      "target_xy_m": [
+        0.2,
+        -0.18
+      ],
+      "yaw_delta_deg": -4,
+      "carry_xy_m": [
+        0.045,
+        0.04
+      ],
+      "carry_yaw_deg": -43,
+      "split": "train",
+      "seed": 4101
+    },
+    {
+      "id": 2,
+      "target_xy_m": [
+        0.24,
+        -0.14
+      ],
+      "yaw_delta_deg": 4,
+      "carry_xy_m": [
+        -0.045,
+        0.035
+      ],
+      "carry_yaw_deg": -41,
+      "split": "train",
+      "seed": 4102
+    },
+    {
+      "id": 3,
+      "target_xy_m": [
+        0.21,
+        -0.15
+      ],
+      "yaw_delta_deg": -2,
+      "carry_xy_m": [
+        0.04,
+        -0.03
+      ],
+      "carry_yaw_deg": -39,
+      "split": "train",
+      "seed": 4103
+    },
+    {
+      "id": 4,
+      "target_xy_m": [
+        0.235,
+        -0.175
+      ],
+      "yaw_delta_deg": 6,
+      "carry_xy_m": [
+        -0.04,
+        0.02
+      ],
+      "carry_yaw_deg": -37,
+      "split": "validation",
+      "seed": 4104
+    }
+  ],
+  "release_policy": "transformed_visual_mesh_bottom_and_actual_table_contact",
+  "acceptance_policy": "all_checks_required_missing_is_failure",
+  "bulk_prerequisites": [
+    "validated_A_B_C_samples",
+    "partner_format_review"
+  ],
+  "camera": {
+    "eye": [
+      0.6,
+      -0.6,
+      2.5
+    ],
+    "look": [
+      0.1,
+      -0.08,
+      1.2
+    ],
+    "width": 640,
+    "height": 480,
+    "focal_length_mm": 24
+  },
+  "variant_qualification_note": "Only baseline trajectory physically demonstrated on all objects; all variants require full per-sequence acceptance. Retry does not relax gates.",
+  "qualification": {
+    "handoff": "outputs/omy_handoff_002",
+    "technical_samples": 7,
+    "scope": "Baseline B/C on all objects; A on marker. Other object/variant combinations require individual acceptance.",
+    "partner_review": "pending"
+  },
+  "release_controller": {
+    "freeze_grasp_reference_during_opening": true,
+    "opening_ramp_frames": 30,
+    "open_angle_rad": 0.02,
+    "clearance_lift_m": 0.04,
+    "clearance_lift_frames": 15,
+    "clearance_trigger": "two frames with no robot/target contact and continuing table support"
+  },
+  "additional_acceptance_policy": "configs/omy_tracking/postflight_acceptance.json"
+}

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "reader_path": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/dataset/reader",
+  "sequences": [
+    "box_B_00",
+    "cylinder_C_00",
+    "asymmetric_C_04"
+  ],
+  "privileged_access_blocked": true,
+  "note": "Identity caller pose tests loading and surface-feature construction, not initialization or tracking accuracy."
+}

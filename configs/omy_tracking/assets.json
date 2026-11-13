@@ -1,0 +1,110 @@
+{
+  "status": "selected_assets_calibration_and_handoff_validation",
+  "isaac_sim_version": "6.2.0.0",
+  "asset_root": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2",
+  "assets": [
+    {
+      "id": "packing_table",
+      "relative_path": "Isaac/Props/PackingTable/packing_table.usd",
+      "source_evidence": "cyclo_lab/source/cyclo_lab/cyclo_lab/manager_based/manipulation/pick_place/config/ffw_bg2/pick_place_env_cfg.py",
+      "http_status": 200,
+      "root_layer_bytes": 13964280,
+      "etag": "733bb6bff6b968272dab3c9c79efa7e9-2",
+      "local_path": null,
+      "sha256": null,
+      "terms": "NVIDIA asset terms require asset-specific review before redistribution",
+      "dependencies_verified": false,
+      "usd_open_verified": true,
+      "preview_composed_scale": 1,
+      "bench_top_m": 0.9940513388652052
+    },
+    {
+      "id": "omy",
+      "source_url": "https://github.com/ROBOTIS-GIT/cyclo_lab",
+      "revision": "a44392325d2ccb250ba77ece3237b55ba1f206e1",
+      "local_path": "/home/a09/robotics/cyclo_lab/source/cyclo_lab/data/robots/OMY/OMY.usd",
+      "sha256": "9d562a393ff88405dfc13878e6bed256141d0228e72ec60d2ac978cf6f1c2d07",
+      "terms": "Review checkout LICENSE and THIRD_PARTY_LICENSES.md; robot configuration declares Apache-2.0",
+      "dependencies_verified": false,
+      "controller_compatibility": "OMY_CFG imports successfully under Isaac Sim 6.2 / Isaac Lab 3.0; dynamics untested",
+      "usd_open_verified": true
+    },
+    {
+      "id": "warehouse",
+      "relative_path": "Isaac/Environments/Simple_Warehouse/warehouse.usd",
+      "http_status": 200,
+      "root_layer_bytes": 1604394,
+      "etag": "2c85ca91e281566f1c97a9db4e7ffe2f",
+      "usd_open_verified": true,
+      "local_path": null,
+      "sha256": null,
+      "meters_per_unit": 1.0,
+      "terms": "NVIDIA asset terms; redistribution review pending",
+      "dependencies_verified": false
+    },
+    {
+      "id": "gelatin_box",
+      "relative_path": "Isaac/Props/YCB/Axis_Aligned/009_gelatin_box.usd",
+      "http_status": 200,
+      "root_layer_bytes": 461296,
+      "etag": "96fc7fb018c8dd5a9a5c59de8de00e20",
+      "size_m": [
+        0.0891831664,
+        0.0731152065,
+        0.0299833398
+      ],
+      "scale": 1,
+      "physics_validated": false,
+      "terms": "NVIDIA-distributed YCB asset; asset-specific redistribution terms pending review",
+      "local_path": null,
+      "sha256": null
+    }
+  ],
+  "selected_pilot_assets": [
+    {
+      "id": "packing_table",
+      "source_url": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Props/PackingTable/packing_table.usd",
+      "local_path": "outputs/omy_asset_snapshot_001/packing_table.usd",
+      "bytes": 13964280,
+      "sha256": "be265b9fa6f73d2bf0da01f1e4afddae9096f5c4988285f67a0f2ae4cc33dcb4",
+      "scale": 1,
+      "terms_url": "https://docs.isaacsim.omniverse.nvidia.com/6.2.0/common/license-faq.html",
+      "license_name": "NVIDIA Isaac Sim Additional Software and Materials License",
+      "third_party_asset_specific_notice": "No separate notice observed in root USD; do not infer a different license from asset name."
+    },
+    {
+      "id": "box",
+      "source_url": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Props/YCB/Axis_Aligned/009_gelatin_box.usd",
+      "local_path": "outputs/omy_asset_snapshot_001/009_gelatin_box.usd",
+      "bytes": 461296,
+      "sha256": "aa8210ec9ee6660fbfd6ccf7fbecad08812607f73502a46a2e82fe6e6216a65e",
+      "scale": 1,
+      "terms_url": "https://docs.isaacsim.omniverse.nvidia.com/6.2.0/common/license-faq.html",
+      "license_name": "NVIDIA Isaac Sim Additional Software and Materials License",
+      "third_party_asset_specific_notice": "No separate notice observed in root USD; do not infer a different license from asset name."
+    },
+    {
+      "id": "cylinder",
+      "source_url": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Props/YCB/Axis_Aligned/040_large_marker.usd",
+      "local_path": "outputs/omy_asset_snapshot_001/040_large_marker.usd",
+      "bytes": 464885,
+      "sha256": "75673b47d4fcddfc2d7d5e825cf43b071f5e385c9f237126f8fe95abfc82df07",
+      "scale": 1,
+      "terms_url": "https://docs.isaacsim.omniverse.nvidia.com/6.2.0/common/license-faq.html",
+      "license_name": "NVIDIA Isaac Sim Additional Software and Materials License",
+      "third_party_asset_specific_notice": "No separate notice observed in root USD; do not infer a different license from asset name."
+    },
+    {
+      "id": "asymmetric",
+      "source_url": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Props/YCB/Axis_Aligned/011_banana.usd",
+      "local_path": "outputs/omy_asset_snapshot_001/011_banana.usd",
+      "bytes": 458300,
+      "sha256": "80bc2df1e9c7cdb2e4ab9848723aadfdaf88937970ede7791ee84100f176f1d9",
+      "scale": 1,
+      "terms_url": "https://docs.isaacsim.omniverse.nvidia.com/6.2.0/common/license-faq.html",
+      "license_name": "NVIDIA Isaac Sim Additional Software and Materials License",
+      "third_party_asset_specific_notice": "No separate notice observed in root USD; do not infer a different license from asset name."
+    }
+  ],
+  "background": "simple matte floor and wall; warehouse excluded"
+}

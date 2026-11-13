@@ -1,0 +1,208 @@
+{
+  "passed": true,
+  "parents_checked": 25,
+  "max_arm_command_tracking_error_rad": 0.018477106094360263,
+  "max_base_translation_drift_m": 0.0,
+  "parents": [
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_banana_retry_002",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018317484855651767,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_box_highview_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01842918395996085,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/asymmetric_manipulation_00_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01830890178680411,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/asymmetric_manipulation_02_attempt_002",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017841124534606845,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/asymmetric_manipulation_03_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018332028388976962,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/asymmetric_manipulation_04_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01780083179473868,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/box_manipulation_01_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018422865867614657,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/box_manipulation_02_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017907643318176403,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/box_manipulation_03_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018477106094360263,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/box_manipulation_04_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017900848388672008,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/cylinder_manipulation_00_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01813783645629874,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/cylinder_manipulation_01_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018147373199462802,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/cylinder_manipulation_02_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017875576019287243,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/cylinder_manipulation_03_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01820209026336661,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/parents/cylinder_manipulation_04_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017764592170715243,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/asymmetric_C_00_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01830890178680411,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/asymmetric_C_01_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018317484855651767,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/asymmetric_C_02_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017841124534606845,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/asymmetric_C_03_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018332028388976962,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/asymmetric_C_04_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01780083179473868,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/cylinder_C_01_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.018147373199462802,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/cylinder_C_02_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017875576019287243,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/cylinder_C_03_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01820209026336661,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/repairs/release_fix_001/parents/cylinder_C_04_attempt_001",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.017764592170715243,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    },
+    {
+      "parent": "/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_release_fix_probe_003",
+      "frames": 60,
+      "duration_s": 2,
+      "max_arm_command_tracking_error_rad": 0.01813783645629874,
+      "base_translation_drift_m": 0.0,
+      "passed": true
+    }
+  ]
+}

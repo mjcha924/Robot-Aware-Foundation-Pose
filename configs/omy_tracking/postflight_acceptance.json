@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "required_checks": ["finite_states_and_joint_limits"],
+  "joint_limit_numerical_tolerance_rad": 0.001,
+  "scope": "Applied independently to every selected clip, including selections made before this postflight check was added.",
+  "note": "The original acceptance.json and its historical report hashes remain unchanged. This adds a stricter check; it does not waive or relax any original check."
+}

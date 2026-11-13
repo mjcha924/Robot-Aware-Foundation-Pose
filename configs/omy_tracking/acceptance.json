@@ -1,0 +1,47 @@
+{
+  "status": "proposed_engineering_gates",
+  "capture_hz": 30,
+  "physics_hz": 120,
+  "required_accepted_sequences": 45,
+  "max_timestamp_step_error_s": 1e-06,
+  "minimum_lift_m": 0.05,
+  "hold_duration_s": 1.0,
+  "max_hold_relative_translation_m": 0.01,
+  "max_hold_relative_rotation_deg": 10,
+  "max_noncontact_object_translation_m": 0.002,
+  "max_noncontact_object_rotation_deg": 2,
+  "max_release_support_gap_m": 0.005,
+  "required_checks": [
+    "schema_and_completeness",
+    "original_rgb_depth_masks",
+    "capture_sync",
+    "camera_and_object_overlay",
+    "robot_fk_overlay",
+    "task_behavior",
+    "physical_grasp_provenance",
+    "textured_object_model_equivalence",
+    "inference_truth_boundary",
+    "episode_parent_split_integrity",
+    "amodal_visibility"
+  ],
+  "unknown_or_missing_check_is_failure": true,
+  "minimum_clear_visible_fraction": 0.8,
+  "maximum_occluded_visible_fraction": 0.6,
+  "minimum_frames_per_visibility_portion": 15,
+  "minimum_carry_translation_m": 0.03,
+  "minimum_carry_rotation_deg": 10,
+  "minimum_clip_duration_s": 6,
+  "maximum_clip_duration_s": 10,
+  "maximum_visual_table_penetration_m": 0.005,
+  "minimum_initial_visible_fraction_by_task": {
+    "A": 0.8,
+    "B": 0.8,
+    "C": 0.4
+  },
+  "minimum_initial_visible_frames_by_task": {
+    "A": 15,
+    "B": 15,
+    "C": 30
+  },
+  "initialization_note": "Task C begins with an already grasped object. Require a continuous 1-second partially visible preroll, independently of the >=80% clear-view portion elsewhere in the clip. Actual FoundationPose initialization remains unverified and is part of the handoff review, not claimed by these geometric gates."
+}

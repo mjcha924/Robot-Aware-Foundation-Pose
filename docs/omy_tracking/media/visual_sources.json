@@ -1,0 +1,43 @@
+{
+  "source": "accepted RGB frames",
+  "crop_xyxy": [
+    190,
+    150,
+    480,
+    440
+  ],
+  "display": "work-area crops, sampled at 10 fps; shorter release clips hold their last frame",
+  "artifacts": {
+    "grasp_three_objects.gif": {
+      "sequences": [
+        "box_B_00",
+        "cylinder_B_00",
+        "asymmetric_B_00"
+      ],
+      "frames": 100,
+      "duration_s": 10.0
+    },
+    "release_three_objects.gif": {
+      "sequences": [
+        "box_C_00",
+        "cylinder_C_00",
+        "asymmetric_C_00"
+      ],
+      "frames": 92,
+      "duration_s": 9.2
+    },
+    "occlusion_example.png": {
+      "sequence": "asymmetric_A_00",
+      "frames": [
+        0,
+        104,
+        239
+      ],
+      "visible_fractions": [
+        1.0,
+        0.325,
+        1.0
+      ]
+    }
+  }
+}
