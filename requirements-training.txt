@@ -1,0 +1,4 @@
+# Install in the already working FoundationPose CUDA environment.
+# Reuse its torch/CUDA versions; do not replace them blindly.
+pytest>=7
+# Point encoder introduces no custom CUDA extension.

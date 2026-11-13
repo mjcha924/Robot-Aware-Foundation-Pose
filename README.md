@@ -128,3 +128,15 @@ FoundationPose is governed by its own NVIDIA license in the submodule. In
 particular, review its research/evaluation and redistribution restrictions
 before use. Pretrained weights, demo data, simulator exports, and generated
 outputs must remain outside Git.
+
+## Trainable robot-conditioned refiner (V1)
+
+A separate opt-in implementation adds local robot/object point tokens and residual
+cross-attention before the original pretrained pose heads. The visual encoder is
+frozen; robot encoder, fusion and pose heads are trained using simulation pose
+supervision. Existing baseline/filtering commands are unchanged.
+
+See [training and CUDA validation guide](docs/ROBOT_CONDITIONED_TRAINING.md) for
+cache preparation, training, ablations, checkpoint resume and sequence rollout.
+This implementation has not yet been validated on CUDA or trained on real OMY
+exports; it does not establish an accuracy improvement.
