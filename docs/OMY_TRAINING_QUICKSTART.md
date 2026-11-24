@@ -71,7 +71,7 @@ python scripts/train_robot_refiner.py --train /data/omy-training/train \
 
 ```bash
 python scripts/evaluate_robot_tracker.py /data/dataset/box_B_04 \
- --initial-pose /data/box_B_04_initial.npy \
+ --initial-pose /data/box_B_04_initial.npy --initialization external \
  --checkpoint /data/omy-training/run-pilot-geometry/best.pt \
  --output /data/results/box_B_geometry
 ```
@@ -83,3 +83,5 @@ checkpoint를 생략하면 동일 bridge의 pretrained visual control이다. 원
 `read_omy_tracking_sample.py`, `omy_robot_surface.py`, `omy_kinematics.py`는 동일 프로젝트 데이터 브랜치 c23b37976ed1ad3d5f48022fd071d2fa49e21a00에서 가져왔다. 모델 입력은 canonical robot 총 512점 + object CAD 256점, 11 channels다. 새 reader는 정답 link pose 대신 measured joint FK를 사용한다. 현재와 이전 표면점을 동일 현재 카메라 좌표로 표현하고 timestamp 차이로 속도를 계산한다.
 
 Frozen encoder cache는 hypothesis에 의존한다. geometry와 motion 학습에 다른 hypothesis를 사용하면 별도 cache를 생성해야 한다. Dataset 확인과 GPU preflight를 통과하지 않은 상태를 학습 준비 완료로 간주하지 않는다.
+
+Current rollout protocol and matched kinematic baselines: [experiment guide](OMY_MOTION_BASELINE_EXPERIMENTS.md). Frame 0 is supplied unchanged and excluded from aggregates; evaluation uses independent 4,096-point surface sampling. Old caches require regeneration.

@@ -58,7 +58,7 @@ def main():
             commands.append([py, ROOT/'scripts/prepare_robot_refiner.py', *tiny,
                 '--output', a.work/('smoke-train' if a.stage == 'smoke' else 'tiny-train'),'--stride','5','--max-frames-per-sequence','2' if a.stage == 'smoke' else '16'])
     else:
-        modes = ['visual','geometry'] if a.stage == 'pilot' else (['geometry','motion'] if a.stage == 'motion' else ['geometry'])
+        modes = ['visual','geometry'] if a.stage == 'pilot' else (['visual','geometry','motion'] if a.stage == 'motion' else ['geometry'])
         prefix = 'motion-' if a.stage == 'motion' else ''
         for mode in modes:
             commands.append([py, ROOT/'scripts/train_robot_refiner.py',

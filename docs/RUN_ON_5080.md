@@ -4,6 +4,8 @@
 
 현재 이 브랜치의 실제 5080 검증은 아직 전이다. 환경이 없다면 upstream 설치 안내와 `docs/BASELINE.md`의 의존성 목록을 참고하되, 그 문서의 옛 버전 조합은 5080용 설치 처방이 아니다. 새 환경이 실제 rendering gate를 통과할 때까지 학습을 진행하지 않는다.
 
+**리뷰 수정 이후에는 기존 cache를 재사용하지 않는다.** diameter 규약이 바뀌었으므로 새 OMY_WORK에서 smoke/cache 생성부터 진행한다. 학습 없는 기구학 baseline과 전체 비교 순서는 OMY_MOTION_BASELINE_EXPERIMENTS.md 및 HTML 17~20절에 있다.
+
 ## 1 코드 받기
 
 기존 작업과 충돌하지 않도록 새 디렉터리에 받는다. private repository라면 GPU 머신의 GitHub 인증을 사용한다.
@@ -34,7 +36,7 @@ python -m pip install -r requirements-training.txt
 ```bash
 export OMY_DATASET=/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/dataset
 export OMY_CHECKSUMS=/home/a09/mj-projects/omy-tracking-dataset/outputs/omy_pilot/accepted_checksums.sha256
-export OMY_WORK="$PWD/outputs/omy_training_001"
+export OMY_WORK="$PWD/outputs/omy_training_002"
 test -d "$OMY_DATASET"
 test -f "$OMY_CHECKSUMS"
 python scripts/check_omy_training_readiness.py --dataset "$OMY_DATASET"
@@ -61,6 +63,8 @@ python scripts/run_omy_training.py --dataset "$OMY_DATASET" \
 ```
 
 오류가 나면 여기서 멈추고 마지막 traceback을 확인한다. 원본 weights, native extension, CUDA 오류를 무시하고 학습 단계로 넘어가지 않는다.
+
+smoke 성공 후 학습에 앞서 HTML 19절의 hold/kinematic/visual/kinematic-refine 비교를 먼저 실행하는 것을 권장한다.
 
 ## 6 학습 cache 준비
 
@@ -104,7 +108,7 @@ python scripts/run_omy_training.py --dataset "$OMY_DATASET" \
   --work "$OMY_WORK" --stage motion --execute
 ```
 
-동일 temporal cache에서 geometry와 motion을 비교한다. 이 단계는 실제 tracker prediction을 사용한 on-policy 학습이 아니다. tracking rollout으로 별도 검증해야 한다.
+동일 temporal cache에서 visual, geometry, motion 세 모델을 학습해 비교한다. 이 단계는 실제 tracker prediction을 사용한 on-policy 학습이 아니다. tracking rollout으로 별도 검증해야 한다.
 
 ## 10 중단과 재개
 

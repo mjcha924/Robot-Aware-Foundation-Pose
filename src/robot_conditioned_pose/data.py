@@ -3,12 +3,15 @@ import json
 from pathlib import Path
 import torch
 from torch.utils.data import Dataset
+from .contracts import GEOMETRY_VERSION, semantic_config
 
 
 class FeatureDataset(Dataset):
     def __init__(self, root):
         self.root = Path(root)
         self.manifest = json.loads((self.root / 'manifest.json').read_text())
+        if self.manifest.get('geometry_version') != GEOMETRY_VERSION:
+            raise ValueError('old geometry convention: rebuild caches and retrain')
         self.files = self.manifest['samples']
         if not self.files:
             raise ValueError('empty cache')
@@ -35,8 +38,10 @@ def check_splits(train, val):
         raise ValueError('non-train sequence in training cache')
     if val.manifest.get('splits') and set(val.manifest['splits']) - {'validation', 'legacy'}:
         raise ValueError('non-validation sequence in validation cache')
-    for key in ('upstream_commit', 'weight_sha256', 'cfg'):
+    for key in ('upstream_commit', 'weight_sha256', 'geometry_version'):
         if train.manifest[key] != val.manifest[key]:
             raise ValueError('cache provenance mismatch: ' + key)
+    if semantic_config(train.manifest['cfg']) != semantic_config(val.manifest['cfg']):
+        raise ValueError('cache provenance mismatch: cfg')
     if set(train.manifest['sequence_ids']) & set(val.manifest['sequence_ids']):
         raise ValueError('train/validation sequence overlap')

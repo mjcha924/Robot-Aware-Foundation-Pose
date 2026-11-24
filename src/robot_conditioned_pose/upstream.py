@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 from .model import RobotConditionedRefiner
 from .geometry import decode_pose
+from .contracts import mesh_diameter
 
 
 def load_upstream(root):
@@ -21,11 +22,11 @@ def load_upstream(root):
 
 class RenderBridge:
     def __init__(self, predictor, mesh):
-        from Utils import make_mesh_tensors, compute_mesh_diameter
+        from Utils import make_mesh_tensors
         import nvdiffrast.torch as dr
         self.predictor, self.mesh = predictor, mesh
         self.mesh_tensors = make_mesh_tensors(mesh)
-        self.diameter = float(compute_mesh_diameter(model_pts=mesh.vertices, n_sample=1000))
+        self.diameter = mesh_diameter(mesh)
         self.context = dr.RasterizeCudaContext()
 
     def pair(self, rgb, depth, intrinsic, hypothesis):

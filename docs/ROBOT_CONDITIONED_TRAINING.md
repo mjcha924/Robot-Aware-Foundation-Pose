@@ -117,7 +117,7 @@ the raw mesh frame first (the normal public estimator return does this).
 
 ```bash
 python scripts/evaluate_robot_tracker.py data/isaac_exports/test_sequence \
-  --initial-pose data/initial_pose.npy \
+  --initial-pose data/initial_pose.npy --initialization external \
   --checkpoint outputs/robot_refiner_motion/best.pt \
   --output outputs/robot_refiner_rollout
 ```
@@ -162,3 +162,5 @@ repository test suite. Syntax compilation passed. The skipped existing test
 requires CUDA. Surface diameter uses a bounded 1,000-vertex sample; it is an
 approximation and shared by this implementation's training and inference paths.
 The renderer bridge restores upstream's global default-tensor-type side effect.
+
+Current rollout protocol and matched kinematic baselines: [experiment guide](OMY_MOTION_BASELINE_EXPERIMENTS.md). Frame 0 is supplied unchanged and excluded from aggregates; evaluation uses independent 4,096-point surface sampling. Old caches require regeneration.

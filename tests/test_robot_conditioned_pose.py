@@ -103,7 +103,8 @@ def test_training_entrypoint(tmp_path):
         torch.save(sample, folder / '0.pt')
         torch.save(base.state_dict(), folder / 'heads.pt')
         (folder / 'manifest.json').write_text(json.dumps(dict(samples=['0.pt'], cfg=cfg,
-            upstream_commit='test', weight_sha256='test', sequence_ids=[split])))
+            upstream_commit='test', weight_sha256='test', sequence_ids=[split],
+            geometry_version='exact-vertex-diameter-v1')))
     args = Namespace(train=str(tmp_path/'train'), val=str(tmp_path/'val'), output=str(tmp_path/'run'),
         epochs=1, batch_size=1, warmup_epochs=1, seed=1, device='cpu', mode='motion', lr=1e-4,
         head_lr=1e-5, resume=None)

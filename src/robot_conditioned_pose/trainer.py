@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from .model import RobotConditionedRefiner
 from .geometry import decode_pose, pose_loss
 from .data import FeatureDataset, collate, check_splits
+from .contracts import portable_provenance
 
 
 class CachedHeads(nn.Module):
@@ -56,7 +57,7 @@ def run(args):
     start, best = 0, float('inf')
     if args.resume:
         ckpt = torch.load(args.resume, map_location=args.device, weights_only=True)
-        if ckpt['mode'] != args.mode or ckpt['provenance'] != train.manifest:
+        if ckpt['mode'] != args.mode or portable_provenance(ckpt['provenance']) != portable_provenance(train.manifest):
             raise ValueError('resume mode/data provenance mismatch')
         model.load_state_dict(ckpt['model']); opt.load_state_dict(ckpt['optimizer'])
         start, best = ckpt['epoch'] + 1, ckpt['best']

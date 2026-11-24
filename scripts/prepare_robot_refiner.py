@@ -34,13 +34,14 @@ def main():
     from robot_conditioned_pose.geometry import axis_angle_matrix
     from robot_conditioned_pose.model import RobotConditionedRefiner
     from robot_conditioned_pose.upstream import load_upstream, RenderBridge
+    from robot_conditioned_pose.contracts import GEOMETRY_VERSION, geometry_record
     torch.manual_seed(a.seed)
     np.random.seed(a.seed)
     a.output.mkdir(parents=True, exist_ok=False)
     predictor, cfg = load_upstream(ROOT / 'third_party/FoundationPose')
     model = RobotConditionedRefiner(predictor.model).cuda().eval()
     weight = Path(cfg['ckpt_dir'])
-    meta = dict(format_version=2, cfg=cfg, sequence_ids=[], parent_groups=[], splits=[], samples=[],
+    meta = dict(format_version=3, geometry_version=GEOMETRY_VERSION, geometries=[], cfg=cfg, sequence_ids=[], parent_groups=[], splits=[], samples=[],
         hypothesis_mode=a.hypothesis, sample_records=[],
         upstream_commit=subprocess.check_output(['git', '-C', str(ROOT / 'third_party/FoundationPose'), 'rev-parse', 'HEAD'], text=True).strip(),
         weight_sha256=hashlib.sha256(weight.read_bytes()).hexdigest(), seed=a.seed,
@@ -58,6 +59,7 @@ def main():
         frames_path = seq / reader.manifest['frames_file']
         meta['sequence_ids'].append(hashlib.sha256(frames_path.read_bytes()).hexdigest())
         bridge = RenderBridge(predictor, reader.mesh)
+        meta['geometries'].append(dict(sequence=seq.name, **geometry_record(reader.mesh, bridge.diameter)))
         indices = list(range(1 if a.hypothesis == "previous" else 0, len(reader.frames), a.stride))
         if a.max_frames_per_sequence is not None:
             if a.max_frames_per_sequence < 1: raise ValueError("max frames must be positive")

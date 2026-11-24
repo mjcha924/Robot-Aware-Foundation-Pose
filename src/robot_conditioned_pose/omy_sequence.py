@@ -1,14 +1,15 @@
 """Measured-state OMY adapter. Privileged labels are lazy supervision only."""
 import json
 import sys
+from functools import lru_cache
 from pathlib import Path
 import numpy as np
 import torch
 from .geometry import point_features
 from .sequence import tensor
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
-from read_omy_tracking_sample import read_tracking_input
-from omy_robot_surface import canonical_surface_points, robot_surface_pair
+from omy_robot_surface import canonical_surface_points
+from omy_kinematics import forward_kinematics
 
 
 class OmySequence:
@@ -18,6 +19,13 @@ class OmySequence:
         self.manifest = json.loads((self.path/'manifest.json').read_text())
         ext = self.manifest['omy_tracking']
         self.frames = [json.loads(s) for s in (self.path/ext['robot_observations_file']).read_text().splitlines()]
+        self.previous_state = json.loads((self.path/ext['previous_robot_state_file']).read_text())
+        self.inventory = json.loads((self.path/ext['joint_inventory']).read_text())
+        self.joint_names = tuple(ext['joint_names'])
+        # Per-instance bounded caches: no retained sequences or all-frame images.
+        self._world_links = lru_cache(maxsize=3)(self._world_links)
+        self._surface_pair = lru_cache(maxsize=1)(self._surface_pair)
+        self.observation = lru_cache(maxsize=1)(self.observation)
         if len(self.frames) != self.manifest['frame_count']:
             raise ValueError('Observation count mismatch')
         self.mesh = trimesh.load(self.path/self.manifest['mesh']['path'], force='mesh', process=False)
@@ -44,16 +52,41 @@ class OmySequence:
     def observation(self, i):
         from PIL import Image
         stem = self.frames[i]['frame_id']+'.png'
-        return (np.asarray(Image.open(self.path/'rgb'/stem))[:, :, :3],
-                np.asarray(Image.open(self.path/'depth'/stem), dtype=np.float32)*.001)
+        with Image.open(self.path/'rgb'/stem) as rgb, Image.open(self.path/'depth'/stem) as depth:
+            return (np.asarray(rgb)[:, :, :3].copy(), np.asarray(depth, dtype=np.float32)*.001)
+
+    def _world_links(self, i):
+        state = self.previous_state if i == -1 else self.frames[i]
+        return forward_kinematics(self.inventory, self.joint_names,
+                                 state['joint_positions'], state['T_world_robot_base'])
+
+    def effector_pose(self, i, link):
+        """World-frame pose from measured joints; no phase/contact/object labels."""
+        links = self._world_links(i)
+        if link not in links:
+            raise ValueError(f'Unknown effector link {link!r}; available: {sorted(links)}')
+        return tensor(links[link])
+
+    def _surface_pair(self, i):
+        current = self.frames[i]
+        previous = self.frames[i-1] if i else self.previous_state
+        dt = current['timestamp_s'] - previous['timestamp_s']
+        if not np.isclose(dt, 1/30, atol=1e-6):
+            raise ValueError('Missing or discontinuous preceding robot state')
+        camera_world = np.linalg.inv(current['T_world_camera'])
+        now, old = self._world_links(i), self._world_links(i-1)
+        positions, prior, normals = [], [], []
+        for name, surface in sorted(self.canonical.items()):
+            t, prev = camera_world @ now[name], camera_world @ old[name]
+            points = surface['points_link_m']
+            positions.append(points @ t[:3, :3].T + t[:3, 3])
+            prior.append(points @ prev[:3, :3].T + prev[:3, 3])
+            normals.append(surface['normals_link'] @ t[:3, :3].T)
+        return tensor(np.concatenate(positions)), tensor(np.concatenate(normals)), tensor(np.concatenate(prior)), dt
 
     def points(self, i, hypothesis, diameter):
-        # Public reader expects object-root pose, model uses raw mesh pose.
-        object_pose = hypothesis.cpu() @ torch.linalg.inv(self.mesh_to_object)
-        sample = read_tracking_input(self.path, i, object_pose.numpy())
-        features = robot_surface_pair(sample, self.canonical)
-        return point_features(tensor(features['positions_camera_m']), tensor(features['normals_camera']),
-            tensor(features['previous_positions_camera_m']), sample['timestamp_s']-sample['previous_timestamp_s'],
+        positions, normals, previous, dt = self._surface_pair(i)
+        return point_features(positions, normals, previous, dt,
             hypothesis.cpu(), self.cad, self.cad_normals, diameter)
 
     def target(self, i):

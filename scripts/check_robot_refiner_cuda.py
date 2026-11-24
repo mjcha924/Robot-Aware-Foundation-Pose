@@ -15,6 +15,7 @@ if __name__ == '__main__':
     from robot_conditioned_pose.model import RobotConditionedRefiner
     from robot_conditioned_pose.geometry import decode_pose
     from robot_conditioned_pose.trainer import CachedHeads
+    from robot_conditioned_pose.contracts import check_checkpoint
     predictor, cfg = load_upstream(ROOT / 'third_party/FoundationPose')
     model = RobotConditionedRefiner(predictor.model).cuda().eval()
     h, w = cfg['input_resize']
@@ -41,8 +42,7 @@ if __name__ == '__main__':
         torch.testing.assert_close(decode_pose(original, pose, diameter, cfg), expected)
     if args.checkpoint:
         saved = torch.load(args.checkpoint, map_location='cuda', weights_only=True)
-        if saved['cfg'] != cfg:
-            raise ValueError('checkpoint config mismatch')
+        check_checkpoint(saved, cfg)
         # Training checkpoints omit the frozen encoder; only those keys may be missing.
         missing, unexpected = model.load_state_dict(saved['model'], strict=False)
         if unexpected or any(not k.startswith(('upstream.encodeA.', 'upstream.encodeAB.', 'upstream.pos_embed.')) for k in missing):
