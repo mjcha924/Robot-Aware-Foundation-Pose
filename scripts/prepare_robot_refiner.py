@@ -17,6 +17,8 @@ def main():
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--stride', type=int, default=5)
     p.add_argument('--seed', type=int, default=0)
+    p.add_argument('--max-frames-per-sequence', type=int)
+    p.add_argument('--hypothesis', choices=['perturbed', 'previous'], default='perturbed')
     p.add_argument('--translation-std', type=float, default=.01)
     p.add_argument('--rotation-std-deg', type=float, default=10)
     a = p.parse_args()
@@ -38,24 +40,37 @@ def main():
     predictor, cfg = load_upstream(ROOT / 'third_party/FoundationPose')
     model = RobotConditionedRefiner(predictor.model).cuda().eval()
     weight = Path(cfg['ckpt_dir'])
-    meta = dict(format_version=1, cfg=cfg, sequence_ids=[], samples=[],
+    meta = dict(format_version=2, cfg=cfg, sequence_ids=[], parent_groups=[], splits=[], samples=[],
+        hypothesis_mode=a.hypothesis, sample_records=[],
         upstream_commit=subprocess.check_output(['git', '-C', str(ROOT / 'third_party/FoundationPose'), 'rev-parse', 'HEAD'], text=True).strip(),
         weight_sha256=hashlib.sha256(weight.read_bytes()).hexdigest(), seed=a.seed,
         translation_std_m=a.translation_std, rotation_std_deg=a.rotation_std_deg,
-        provenance='ideal simulator link poses; no encoder-noise/FK experiment',
+        provenance='OMY: measured joints plus FK; legacy: ideal link poses',
         symmetry_note='identity unless mesh.symmetries_mesh explicitly supplied')
     count = 0
-    from robot_conditioned_pose.sequence import IsaacSequence
+    from robot_conditioned_pose.omy_sequence import open_sequence
     for seq in a.sequences:
-        reader = IsaacSequence(seq)
+        reader = open_sequence(seq)
+        ext = reader.manifest.get("omy_tracking", {})
+        meta["parent_groups"].append(ext.get("parent_group", str(seq.resolve())))
+        meta["splits"].append(ext.get("split", "legacy"))
         # Content identity catches copied sequences at different paths.
         frames_path = seq / reader.manifest['frames_file']
         meta['sequence_ids'].append(hashlib.sha256(frames_path.read_bytes()).hexdigest())
         bridge = RenderBridge(predictor, reader.mesh)
-        for i in range(0, len(reader.frames), a.stride):
+        indices = list(range(1 if a.hypothesis == "previous" else 0, len(reader.frames), a.stride))
+        if a.max_frames_per_sequence is not None:
+            if a.max_frames_per_sequence < 1: raise ValueError("max frames must be positive")
+            indices = [indices[j] for j in np.linspace(0, len(indices)-1, min(len(indices), a.max_frames_per_sequence), dtype=int)]
+        for i in indices:
             gt = reader.target(i)
             hypothesis = gt.clone()
-            hypothesis[:3, :3] = axis_angle_matrix(torch.randn(1, 3) * np.deg2rad(a.rotation_std_deg))[0] @ gt[:3, :3]
+            if a.hypothesis == "previous":
+                previous = reader.target(i-1)
+                current_camera = torch.as_tensor(reader.frames[i]["T_world_camera"], dtype=torch.float32)
+                previous_camera = torch.as_tensor(reader.frames[i-1]["T_world_camera"], dtype=torch.float32)
+                hypothesis = torch.linalg.inv(current_camera) @ previous_camera @ previous
+            hypothesis[:3, :3] = axis_angle_matrix(torch.randn(1, 3) * np.deg2rad(a.rotation_std_deg))[0] @ hypothesis[:3, :3]
             hypothesis[:3, 3] += torch.randn(3) * a.translation_std
             if hypothesis[2, 3] <= 0:
                 continue
@@ -66,7 +81,9 @@ def main():
             sample = dict(visual=visual, points=points, hypothesis=hypothesis, target=gt,
                 cad=reader.cad, diameter=torch.tensor(bridge.diameter), symmetries=reader.symmetries)
             name = f'{count:07d}.pt'; torch.save(sample, a.output / name)
-            meta['samples'].append(name); count += 1
+            meta['samples'].append(name)
+            meta['sample_records'].append(dict(sequence=seq.name, frame_index=i))
+            count += 1
     if not count:
         raise ValueError('no samples generated')
     torch.save({k: v.cpu() for k, v in predictor.model.state_dict().items()

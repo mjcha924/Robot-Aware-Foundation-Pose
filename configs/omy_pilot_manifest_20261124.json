@@ -1,0 +1,329 @@
+{
+  "sequence_count": 45,
+  "capture_hz": 30,
+  "sequences": {
+    "asymmetric_A_00": {
+      "path": "asymmetric_A_00",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "asymmetric_noncontact_00",
+      "selection_proof": "asymmetric_A_00/validation/pilot_acceptance.json"
+    },
+    "asymmetric_A_01": {
+      "path": "asymmetric_A_01",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "asymmetric_noncontact_01",
+      "selection_proof": "asymmetric_A_01/validation/pilot_acceptance.json"
+    },
+    "asymmetric_A_02": {
+      "path": "asymmetric_A_02",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "asymmetric_noncontact_02",
+      "selection_proof": "asymmetric_A_02/validation/pilot_acceptance.json"
+    },
+    "asymmetric_A_03": {
+      "path": "asymmetric_A_03",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "asymmetric_noncontact_03",
+      "selection_proof": "asymmetric_A_03/validation/pilot_acceptance.json"
+    },
+    "asymmetric_A_04": {
+      "path": "asymmetric_A_04",
+      "frames": 240,
+      "split": "validation",
+      "parent_group": "asymmetric_noncontact_04",
+      "selection_proof": "asymmetric_A_04/validation/pilot_acceptance.json"
+    },
+    "asymmetric_B_00": {
+      "path": "asymmetric_B_00",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "asymmetric_manipulation_00",
+      "selection_proof": "asymmetric_B_00/validation/pilot_acceptance.json"
+    },
+    "asymmetric_B_01": {
+      "path": "asymmetric_B_01",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "asymmetric_manipulation_01",
+      "selection_proof": "asymmetric_B_01/validation/pilot_acceptance.json"
+    },
+    "asymmetric_B_02": {
+      "path": "asymmetric_B_02",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "asymmetric_manipulation_02",
+      "selection_proof": "asymmetric_B_02/validation/pilot_acceptance.json"
+    },
+    "asymmetric_B_03": {
+      "path": "asymmetric_B_03",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "asymmetric_manipulation_03",
+      "selection_proof": "asymmetric_B_03/validation/pilot_acceptance.json"
+    },
+    "asymmetric_B_04": {
+      "path": "asymmetric_B_04",
+      "frames": 300,
+      "split": "validation",
+      "parent_group": "asymmetric_manipulation_04",
+      "selection_proof": "asymmetric_B_04/validation/pilot_acceptance.json"
+    },
+    "asymmetric_C_00": {
+      "path": "asymmetric_C_00",
+      "frames": 275,
+      "split": "train",
+      "parent_group": "asymmetric_releasefix_00_attempt_001",
+      "selection_proof": "asymmetric_C_00/validation/pilot_acceptance.json"
+    },
+    "asymmetric_C_01": {
+      "path": "asymmetric_C_01",
+      "frames": 275,
+      "split": "train",
+      "parent_group": "asymmetric_releasefix_01_attempt_001",
+      "selection_proof": "asymmetric_C_01/validation/pilot_acceptance.json"
+    },
+    "asymmetric_C_02": {
+      "path": "asymmetric_C_02",
+      "frames": 274,
+      "split": "train",
+      "parent_group": "asymmetric_releasefix_02_attempt_001",
+      "selection_proof": "asymmetric_C_02/validation/pilot_acceptance.json"
+    },
+    "asymmetric_C_03": {
+      "path": "asymmetric_C_03",
+      "frames": 272,
+      "split": "train",
+      "parent_group": "asymmetric_releasefix_03_attempt_001",
+      "selection_proof": "asymmetric_C_03/validation/pilot_acceptance.json"
+    },
+    "asymmetric_C_04": {
+      "path": "asymmetric_C_04",
+      "frames": 267,
+      "split": "validation",
+      "parent_group": "asymmetric_releasefix_04_attempt_001",
+      "selection_proof": "asymmetric_C_04/validation/pilot_acceptance.json"
+    },
+    "box_A_00": {
+      "path": "box_A_00",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "box_noncontact_00",
+      "selection_proof": "box_A_00/validation/pilot_acceptance.json"
+    },
+    "box_A_01": {
+      "path": "box_A_01",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "box_noncontact_01",
+      "selection_proof": "box_A_01/validation/pilot_acceptance.json"
+    },
+    "box_A_02": {
+      "path": "box_A_02",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "box_noncontact_02",
+      "selection_proof": "box_A_02/validation/pilot_acceptance.json"
+    },
+    "box_A_03": {
+      "path": "box_A_03",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "box_noncontact_03",
+      "selection_proof": "box_A_03/validation/pilot_acceptance.json"
+    },
+    "box_A_04": {
+      "path": "box_A_04",
+      "frames": 240,
+      "split": "validation",
+      "parent_group": "box_noncontact_04",
+      "selection_proof": "box_A_04/validation/pilot_acceptance.json"
+    },
+    "box_B_00": {
+      "path": "box_B_00",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "box_manipulation_00",
+      "selection_proof": "box_B_00/validation/pilot_acceptance.json"
+    },
+    "box_B_01": {
+      "path": "box_B_01",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "box_manipulation_01",
+      "selection_proof": "box_B_01/validation/pilot_acceptance.json"
+    },
+    "box_B_02": {
+      "path": "box_B_02",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "box_manipulation_02",
+      "selection_proof": "box_B_02/validation/pilot_acceptance.json"
+    },
+    "box_B_03": {
+      "path": "box_B_03",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "box_manipulation_03",
+      "selection_proof": "box_B_03/validation/pilot_acceptance.json"
+    },
+    "box_B_04": {
+      "path": "box_B_04",
+      "frames": 300,
+      "split": "validation",
+      "parent_group": "box_manipulation_04",
+      "selection_proof": "box_B_04/validation/pilot_acceptance.json"
+    },
+    "box_C_00": {
+      "path": "box_C_00",
+      "frames": 257,
+      "split": "train",
+      "parent_group": "box_manipulation_00",
+      "selection_proof": "box_C_00/validation/pilot_acceptance.json"
+    },
+    "box_C_01": {
+      "path": "box_C_01",
+      "frames": 256,
+      "split": "train",
+      "parent_group": "box_manipulation_01",
+      "selection_proof": "box_C_01/validation/pilot_acceptance.json"
+    },
+    "box_C_02": {
+      "path": "box_C_02",
+      "frames": 249,
+      "split": "train",
+      "parent_group": "box_manipulation_02",
+      "selection_proof": "box_C_02/validation/pilot_acceptance.json"
+    },
+    "box_C_03": {
+      "path": "box_C_03",
+      "frames": 245,
+      "split": "train",
+      "parent_group": "box_manipulation_03",
+      "selection_proof": "box_C_03/validation/pilot_acceptance.json"
+    },
+    "box_C_04": {
+      "path": "box_C_04",
+      "frames": 243,
+      "split": "validation",
+      "parent_group": "box_manipulation_04",
+      "selection_proof": "box_C_04/validation/pilot_acceptance.json"
+    },
+    "cylinder_A_00": {
+      "path": "cylinder_A_00",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "cylinder_noncontact_00",
+      "selection_proof": "cylinder_A_00/validation/pilot_acceptance.json"
+    },
+    "cylinder_A_01": {
+      "path": "cylinder_A_01",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "cylinder_noncontact_01",
+      "selection_proof": "cylinder_A_01/validation/pilot_acceptance.json"
+    },
+    "cylinder_A_02": {
+      "path": "cylinder_A_02",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "cylinder_noncontact_02",
+      "selection_proof": "cylinder_A_02/validation/pilot_acceptance.json"
+    },
+    "cylinder_A_03": {
+      "path": "cylinder_A_03",
+      "frames": 240,
+      "split": "train",
+      "parent_group": "cylinder_noncontact_03",
+      "selection_proof": "cylinder_A_03/validation/pilot_acceptance.json"
+    },
+    "cylinder_A_04": {
+      "path": "cylinder_A_04",
+      "frames": 240,
+      "split": "validation",
+      "parent_group": "cylinder_noncontact_04",
+      "selection_proof": "cylinder_A_04/validation/pilot_acceptance.json"
+    },
+    "cylinder_B_00": {
+      "path": "cylinder_B_00",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "cylinder_manipulation_00",
+      "selection_proof": "cylinder_B_00/validation/pilot_acceptance.json"
+    },
+    "cylinder_B_01": {
+      "path": "cylinder_B_01",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "cylinder_manipulation_01",
+      "selection_proof": "cylinder_B_01/validation/pilot_acceptance.json"
+    },
+    "cylinder_B_02": {
+      "path": "cylinder_B_02",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "cylinder_manipulation_02",
+      "selection_proof": "cylinder_B_02/validation/pilot_acceptance.json"
+    },
+    "cylinder_B_03": {
+      "path": "cylinder_B_03",
+      "frames": 300,
+      "split": "train",
+      "parent_group": "cylinder_manipulation_03",
+      "selection_proof": "cylinder_B_03/validation/pilot_acceptance.json"
+    },
+    "cylinder_B_04": {
+      "path": "cylinder_B_04",
+      "frames": 300,
+      "split": "validation",
+      "parent_group": "cylinder_manipulation_04",
+      "selection_proof": "cylinder_B_04/validation/pilot_acceptance.json"
+    },
+    "cylinder_C_00": {
+      "path": "cylinder_C_00",
+      "frames": 260,
+      "split": "train",
+      "parent_group": "cylinder_releasefix_00_attempt_001",
+      "selection_proof": "cylinder_C_00/validation/pilot_acceptance.json"
+    },
+    "cylinder_C_01": {
+      "path": "cylinder_C_01",
+      "frames": 260,
+      "split": "train",
+      "parent_group": "cylinder_releasefix_01_attempt_001",
+      "selection_proof": "cylinder_C_01/validation/pilot_acceptance.json"
+    },
+    "cylinder_C_02": {
+      "path": "cylinder_C_02",
+      "frames": 259,
+      "split": "train",
+      "parent_group": "cylinder_releasefix_02_attempt_001",
+      "selection_proof": "cylinder_C_02/validation/pilot_acceptance.json"
+    },
+    "cylinder_C_03": {
+      "path": "cylinder_C_03",
+      "frames": 255,
+      "split": "train",
+      "parent_group": "cylinder_releasefix_03_attempt_001",
+      "selection_proof": "cylinder_C_03/validation/pilot_acceptance.json"
+    },
+    "cylinder_C_04": {
+      "path": "cylinder_C_04",
+      "frames": 252,
+      "split": "validation",
+      "parent_group": "cylinder_releasefix_04_attempt_001",
+      "selection_proof": "cylinder_C_04/validation/pilot_acceptance.json"
+    }
+  },
+  "units": {
+    "length": "metres",
+    "joints": "radians",
+    "depth_png": "uint16 millimetres; zero invalid"
+  },
+  "camera_axes": "OpenCV: +X right, +Y down, +Z forward",
+  "transform_convention": "T_A_B maps B into A using column vectors",
+  "tracking_accuracy_evaluated": false
+}

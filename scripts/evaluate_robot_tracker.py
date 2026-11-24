@@ -22,12 +22,12 @@ if __name__ == '__main__':
     if errors: raise ValueError(errors)
     import numpy as np
     import torch
-    from robot_conditioned_pose.sequence import IsaacSequence
+    from robot_conditioned_pose.omy_sequence import open_sequence
     from robot_conditioned_pose.upstream import load_upstream, RenderBridge
     from robot_conditioned_pose.model import RobotConditionedRefiner
     from robot_conditioned_pose.geometry import pose_loss
     np.random.seed(0); torch.manual_seed(0)
-    reader = IsaacSequence(a.sequence)
+    reader = open_sequence(a.sequence)
     predictor, cfg = load_upstream(ROOT / 'third_party/FoundationPose')
     model = RobotConditionedRefiner(predictor.model, mode='visual').cuda().eval()
     if a.checkpoint:
@@ -41,7 +41,10 @@ if __name__ == '__main__':
         model.mode = saved['mode']
     bridge = RenderBridge(predictor, reader.mesh)
     pose = torch.as_tensor(np.load(a.initial_pose), dtype=torch.float32, device='cuda')[None]
-    if pose.shape != (1, 4, 4) or not torch.isfinite(pose).all():
+    if (pose.shape != (1, 4, 4) or not torch.isfinite(pose).all()
+        or not torch.allclose(pose[0,3], pose.new_tensor([0,0,0,1]))
+        or not torch.allclose(pose[0,:3,:3].T @ pose[0,:3,:3], torch.eye(3,device='cuda'), atol=1e-4)
+        or not torch.isclose(torch.linalg.det(pose[0,:3,:3]), pose.new_tensor(1.), atol=1e-4)):
         raise ValueError('expected finite 4x4 initial pose')
     a.output.mkdir(parents=True, exist_ok=False)
     with (a.output / 'poses.jsonl').open('w') as f:
@@ -55,7 +58,7 @@ if __name__ == '__main__':
             pose = bridge.refine(model, rgb, depth, reader.K, pose,
                 lambda h: reader.points(i, h[0], bridge.diameter)[None], cfg, a.iterations)
             row = dict(frame_id=frame['frame_id'], T_camera_mesh=pose[0].cpu().tolist())
-            if 'T_world_object_gt' in frame:
+            if 'T_world_object_gt' in frame or 'omy_tracking' in reader.manifest:
                 # GT accessed ONLY after prediction.
                 error = pose_loss(pose.cpu(), reader.target(i)[None], reader.cad[None], [reader.symmetries])
                 row['symmetry_surface_error_m'] = error.item()

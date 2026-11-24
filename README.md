@@ -1,5 +1,17 @@
 # Effector-Aware FoundationPose
 
+## OMY training branch
+
+This branch integrates the measured-state OMY dataset reader with the robot-conditioned refiner.
+Start with [5080 execution commands](docs/RUN_ON_5080.md) and download/open the
+[self-contained Korean learning guide](docs/OMY_TRAINING_GUIDE.html) in a browser.
+The guide explains the architecture, data flow, training loop, checkpoints and evaluation.
+
+Local CPU tests: 58 passed, 1 CUDA test skipped. Real OMY CUDA rendering and training
+remain to be verified on the GPU machine. Raw datasets and pretrained weights are not
+included. The historical baseline records below describe earlier project checkpoints.
+
+
 Research workspace for adding robot end-effector context to
 [FoundationPose](https://github.com/NVlabs/FoundationPose). The unchanged
 pretrained pipeline is preserved as the control for evaluating method changes.

@@ -1,6 +1,7 @@
 """Training on cached frozen visual tokens; rendering stays outside autograd."""
 import json
 import random
+import time
 from pathlib import Path
 import numpy as np
 import torch
@@ -67,7 +68,12 @@ def run(args):
     val_loader = DataLoader(val, batch_size=args.batch_size, collate_fn=collate)
     for epoch in range(start, args.epochs):
         model.train()
-        model.set_head_training(epoch >= args.warmup_epochs or args.mode == 'visual')
+        model.set_head_training(epoch >= args.warmup_epochs)
+        if args.mode == 'visual' and epoch < args.warmup_epochs:
+            raise ValueError('visual mode requires warmup_epochs=0')
+        if args.device.startswith('cuda'):
+            torch.cuda.reset_peak_memory_stats(); torch.cuda.synchronize()
+        epoch_start = time.perf_counter()
         total = 0.
         for raw in train_loader:
             b = device_batch(raw, args.device)
@@ -89,7 +95,8 @@ def run(args):
                 valid += loss.item() * len(b['visual'])
         valid /= len(val)
         improved = valid < best; best = min(best, valid)
-        record = dict(epoch=epoch, train_surface_error_m=total / len(train), val_surface_error_m=valid)
+        if args.device.startswith('cuda'): torch.cuda.synchronize()
+        record = dict(seconds=time.perf_counter()-epoch_start, peak_cuda_bytes=torch.cuda.max_memory_allocated() if args.device.startswith('cuda') else 0, epoch=epoch, train_surface_error_m=total / len(train), val_surface_error_m=valid)
         print(json.dumps(record), flush=True)
         with (root / 'metrics.jsonl').open('a') as f:
             f.write(json.dumps(record) + '\n')

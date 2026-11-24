@@ -13,7 +13,7 @@ if __name__ == '__main__':
     p.add_argument('--mode', choices=['visual', 'geometry', 'motion'], default='motion')
     p.add_argument('--device', default='cuda')
     p.add_argument('--epochs', type=int, default=20)
-    p.add_argument('--warmup-epochs', type=int, default=1)
+    p.add_argument('--warmup-epochs', type=int, default=0)
     p.add_argument('--batch-size', type=int, default=4)
     p.add_argument('--lr', type=float, default=1e-4)
     p.add_argument('--head-lr', type=float, default=1e-5)

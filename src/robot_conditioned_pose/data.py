@@ -29,6 +29,12 @@ def collate(samples):
 
 
 def check_splits(train, val):
+    if set(train.manifest.get('parent_groups', [])) & set(val.manifest.get('parent_groups', [])):
+        raise ValueError('train/validation physical parent overlap')
+    if train.manifest.get('splits') and set(train.manifest['splits']) - {'train', 'legacy'}:
+        raise ValueError('non-train sequence in training cache')
+    if val.manifest.get('splits') and set(val.manifest['splits']) - {'validation', 'legacy'}:
+        raise ValueError('non-validation sequence in validation cache')
     for key in ('upstream_commit', 'weight_sha256', 'cfg'):
         if train.manifest[key] != val.manifest[key]:
             raise ValueError('cache provenance mismatch: ' + key)

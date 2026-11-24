@@ -2,3 +2,9 @@
 # Reuse its torch/CUDA versions; do not replace them blindly.
 pytest>=7
 # Point encoder introduces no custom CUDA extension.
+# Additional OMY FK/reader dependencies, installed without replacing working torch.
+numpy
+scipy
+trimesh
+Pillow
+imageio
