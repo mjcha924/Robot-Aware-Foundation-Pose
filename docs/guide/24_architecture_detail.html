@@ -1,0 +1,34 @@
+<p class="lead">Encoder는 입력을 비교하기 좋은 특징으로 바꾸고, fusion은 그 특징들을 섞고, head는 특징을 최종 출력 숫자로 바꾼다. 세 이름은 역할을 구분하는 말이다.</p>
+<h3>Feature와 token은 무엇인가</h3>
+<p>Feature는 모델이 학습한 특징 숫자다. “이 숫자는 반드시 손가락, 저 숫자는 접촉”처럼 사람이 의미를 지정하지 않는다. Token은 특징 벡터 하나다. Visual token은 이미지 특징 맵의 한 공간 위치에서 나오지만, CNN의 receptive field 때문에 딱 한 pixel만 표현하지 않는다. Geometry token은 여러 3D 이웃 점을 모아 만든다.</p>
+<p><strong>CNN</strong>은 작은 공간 필터를 여러 위치에 공유해 이미지 패턴을 처리한다. <strong>MLP</strong>는 <code>Wx+b</code> 형태의 Linear 연산과 비선형 함수를 여러 층 쌓은 네트워크다. 비선형 함수 없이 Linear만 여러 번 쌓으면 결국 하나의 Linear로 합쳐진다. 여기서는 GELU를 사용한다. <strong>LayerNorm</strong>은 특징 벡터의 크기 분포를 정리하고 학습 가능한 scale/bias를 적용한다. 3D 좌표를 물체 diameter로 나누는 기하 정규화와는 다른 연산이다.</p>
+<p><strong>위치 embedding</strong>은 특징만으로 구분하기 어려운 위치 정보를 더한다. Visual 쪽은 upstream의 고정 sinusoidal embedding이고, geometry 쪽은 중심점 XYZ를 작은 MLP로 바꾼 학습 가능한 embedding이다. 표의 <strong>max pooling</strong>은 각 feature 채널에서 이웃들의 최대값을 뽑는 연산이다. 물체 pose의 최댓값을 고르는 것이 아니다.</p>
+<div class="table"><table><thead><tr><th>흐름</th><th>기본 shape</th><th>코드에서 하는 일</th></tr></thead><tbody>
+<tr><td>각 렌더/관측 crop</td><td>[B, 6, H, W]</td><td>RGB 3 + XYZ 3. 현재 bridge는 normal 입력을 지원하지 않는다. 사용할 upstream config의 c_in도 이 입력과 맞아야 한다.</td></tr>
+<tr><td>Frozen visual</td><td>[B, L, 512]</td><td>두 crop을 shared encodeA로 처리하고, 채널 결합 → encodeAB → 위치 embedding.</td></tr>
+<tr><td>Robot + CAD 입력</td><td>[B, 768, 11]</td><td>로봇 512점 + 물체 CAD 256점. 11개 채널은 05절 참조.</td></tr>
+<tr><td>Local aggregation 1</td><td>128개 중심, 특징 64</td><td>공간적으로 퍼진 중심점을 선택하고, 가까운 최대 16개 중 반경 0.15 이내를 사용.</td></tr>
+<tr><td>Local aggregation 2</td><td>32개 중심, 특징 128</td><td>반경 0.35로 다시 이웃을 모은다. 반경은 diameter로 나눈 좌표의 값이다.</td></tr>
+<tr><td>Geometry token</td><td>[B, 32, 512]</td><td>128→512 projection + 중심점 좌표의 학습된 embedding.</td></tr>
+<tr><td>Fusion / heads</td><td>[B,L,512] → [B,3] 각각</td><td>Cross-attention residual → trans/rot heads → token 축 평균.</td></tr>
+</tbody></table></div>
+<p>실제 입력점 수가 기본값보다 작으면 중심점 수도 줄어든다. Point aggregation은 상대 좌표와 기존 feature를 MLP에 통과시키고 채널별 max를 취한다. 서로 다른 채널의 최대값이 서로 다른 이웃에서 나올 수 있다. Sampling/grouping으로 “학습 가능한 점 좌표”를 새로 생성하는 구조는 아니다.</p>
+<p>이 계층적 local aggregation은 <a href="https://arxiv.org/abs/1706.02413">PointNet++</a>에서 영감을 받았지만, 우리 코드는 nearest-neighbor + radius mask, LayerNorm/GELU 등을 사용한 자체 구현이다. 논문의 전체 모델이나 multi-scale grouping을 그대로 재현했다고 주장하지 않는다.</p>
+<div class="callout"><strong>중요한 구분:</strong> 이름은 RobotEncoder지만 32개 token에는 로봇점과 물체 CAD점이 함께 들어간다. “32개 robot link token”도 “관절 32개”도 아니다. 성능 개선을 robot state만의 효과라고 말하려면 CAD-only 비교가 추가로 필요하다.</div>
+<h3>Cross-attention을 숫자로 이해하기</h3>
+<pre><code>Q = LayerNorm(visual) · Wq
+K = LayerNorm(geometry_tokens) · Wk
+V = LayerNorm(geometry_tokens) · Wv
+
+A = softmax(QKᵀ / sqrt(d_head))
+extra = concat(head_1, ..., head_4) · Wo
+fused = visual + alpha · extra</code></pre>
+<p>위 식은 projection bias를 생략한 설명이다. Query는 “현재 시각 특징이 무엇을 참고할까”, Key는 매칭할 특징, Value는 가져올 정보 역할이다. 우리 모델은 512차원을 4개 attention head로 나누므로 head당 128차원이다. 각 visual token은 32개 geometry token에 대한 가중치를 계산한다. 여기서 attention head 4개와 translation/rotation 출력 head 2개는 다른 뜻이다.</p>
+<p>예를 들어 두 key에 대한 정규화 전 점수가 [2,0]이라면 softmax 가중치는 약 [0.881,0.119]다. 이것은 key 두 개를 비교하는 설명용 예제다. 실제 입력은 기본 32개이고 점수도 학습된 projection에서 나온다. 가중치가 높다고 그 token이 물리적 접촉 원인임이 증명되지는 않는다. 연산의 일반 원리는 <a href="https://arxiv.org/html/1706.03762v7#S3.SS2">Attention Is All You Need 3.2절</a>에서 확인할 수 있다.</p>
+<p>Key가 하나뿐인 일반 softmax attention은 그 key의 가중치가 항상 1이라 query에 따른 선택이 사라진다. 여러 local token을 쓰는 이유 중 하나다. 다만 token 수가 많을수록 정확도가 좋아진다는 보장은 없다.</p>
+<p>alpha는 처음 0.01인 <strong>모든 sample이 공유하는 scalar parameter</strong>다. 접촉 여부에 따라 매 프레임 달라지는 trust gate가 아니고 확률도 아니다. 초기에는 visual 특징에 작은 보정을 더하자는 설계지만, 실제 보정량은 extra의 크기에도 달려 있다. alpha=0으로 만들면 유한한 입력에서 출력 residual은 사라지지만 branch 계산은 수행한다. bypass/visual 모드는 branch 자체를 건너뛴다.</p>
+<h3>학습되는 크기와 아직 없는 것</h3>
+<p>현재 기본 구조를 CachedHeads로 구성해 센 parameter 수는 새 encoder/fusion 1,413,953개, 두 pose heads 3,159,046개다. Frozen visual encoder는 이 수에 포함하지 않았다. Tiny에서는 새 부분만, geometry/motion pilot에서는 둘 다 업데이트한다. Visual-only에서는 pose heads만 loss에 연결돼 업데이트된다. 이 숫자는 실행 시간이나 VRAM 측정값이 아니다.</p>
+<p>Motion 입력은 현재·직전 관절 위치로 얻은 표면점의 유한차분 속도다. 관측 파일의 joint_velocities를 그대로 넣는 것이 아니다. 현재 모델에는 이전 RGB를 보는 encoder, recurrent memory, sequence Transformer, contact probability 출력이 없다. 이전 prediction을 다음 frame의 hypothesis로 전달하는 tracker의 외부 상태는 있지만, neural network 내부가 긴 sequence를 학습하는 것은 아니다.</p>
+<p>FoundationPose는 본래 CAD 또는 reference images 조건의 novel-object pose 추정/추적을 다룬다. 우리는 그중 CAD가 있는 조건의 pretrained refiner를 사용하고 일부 모듈을 추가 학습한다. 원 논문의 전체 학습 절차·scoring 학습을 재현하거나, 현재 pilot만으로 novel-object 일반화를 입증한 것은 아니다. <a href="https://arxiv.org/abs/2312.08344">FoundationPose 원 논문</a>.</p>
+<details><summary>연습: 이 모델의 alpha를 보고 “지금 grasp했을 확률”이라고 해석해도 될까?</summary><p>안 된다. alpha는 현재 입력에 따라 생성되는 확률이 아니라 학습된 전역 scalar다. Attention 결과 extra는 입력에 따라 달라지지만, 이것도 contact 확률로 학습된 값은 아니다.</p></details>

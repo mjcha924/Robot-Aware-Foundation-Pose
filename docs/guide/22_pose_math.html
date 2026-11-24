@@ -1,0 +1,37 @@
+<p class="lead">Pose는 “물체가 어디 있고 어느 방향을 향하는가”다. 위치와 방향을 수치로 바꿔야 영상, 로봇, CAD를 같은 공간에서 비교할 수 있다.</p>
+<h3>벡터·행렬·tensor부터</h3>
+<p>벡터 <code>p = [x, y, z]</code>는 3차원 점 하나다. 3×3 회전행렬 R은 그 점의 방향을 돌리는 연산이고, 3차원 t를 더하면 위치를 옮긴다. Tensor는 여러 축을 가진 숫자 배열이다. 예를 들어 <code>[4, 768, 11]</code>은 “sample 4개 × 점 768개 × 점마다 숫자 11개”다. 이 모양을 <em>shape</em>라고 하며, 11이 11차원 공간의 위치라는 뜻은 아니다.</p>
+<p>물체 pose의 자유도는 위치 3개와 회전 3개로 총 6개다. 회전행렬에는 숫자가 9개 있지만 각 열이 서로 수직인 단위벡터라는 제약 때문에 독립적인 자유도는 3개다. 유효한 회전은 <code>RᵀR = I, det(R) = +1</code>을 만족한다.</p>
+<h3>같은 점도 좌표계에 따라 숫자가 달라진다</h3>
+<pre><code>p_camera = R_camera_mesh · p_mesh + t_camera_mesh
+
+              ┌ R00 R01 R02 tx ┐
+T_camera_mesh =│ R10 R11 R12 ty │
+              │ R20 R21 R22 tz │
+              └  0   0   0  1 ┘
+
+[p_camera, 1]ᵀ = T_camera_mesh · [p_mesh, 1]ᵀ</code></pre>
+<p>아래 첨자는 오른쪽에서 왼쪽으로 읽는다. <code>T_camera_mesh</code>는 mesh 좌표를 camera 좌표로 바꾼다. 단위는 m다. 회전이 없고 물체 원점이 카메라 앞 1m에 있다면 mesh의 점 <code>(0.02, 0, 0)</code>은 카메라에서 <code>(0.02, 0, 1)</code>이 된다. 이때 translation의 크기 1m는 “카메라에서 물체 원점까지의 위치”이고, 물체 크기 2cm와 다른 값이다.</p>
+<p><code>T_camera_object · T_object_mesh</code>처럼 중간 좌표 이름이 맞으면 연결할 수 있다. 역행렬은 반대 방향 변환이다. 곱셈 순서를 바꾸면 보통 다른 결과가 나온다. 행렬 합성의 기본은 <a href="https://modernrobotics.northwestern.edu/nu-gm-book-resource/3-3-1-homogeneous-transformation-matrices/">Modern Robotics 3.3.1</a>의 설명과 연결해 읽자. 우리 코드는 점을 N×3 행 배열로 저장해서 <code>points @ R.T + t</code>로 계산하지만, 수학적 좌표 규약은 같은 column-vector 규약이다.</p>
+<h3>3D 점이 영상 pixel이 되는 과정</h3>
+<pre><code>u = fx · X/Z + cx
+v = fy · Y/Z + cy
+
+예시: fx=fy=600 px, (cx,cy)=(320,240) px
+카메라 점 (X,Y,Z)=(0.02,0,1) m → pixel (u,v)=(332,240)</code></pre>
+<p>fx, fy는 pixel 단위 초점거리이고 cx, cy는 주점이다. 이 네 값이 K라는 내참수 행렬에 들어간다. 같은 2cm라도 가까운 물체에서는 더 많은 pixel을 움직인다. OpenCV camera의 +X는 오른쪽, +Y는 아래쪽, +Z는 카메라 앞이다. Z≤0인 점을 정상 영상 좌표처럼 나누면 안 된다. 우리 시각화 도구는 화면과 near-plane에서 선을 잘라낸다.</p>
+<p>RGB-D의 D는 이 데이터에서 optical-axis 깊이 Z다. PNG의 1000은 1000m가 아니라 1000mm = 1m다. <code>X=(u−cx)Z/fx</code>, <code>Y=(v−cy)Z/fy</code>로 depth를 XYZ map으로 바꿀 수 있다. 신경망의 visual 입력은 단순 RGB 3채널만이 아니라 렌더/관측 각각의 RGB+XYZ crop이다. 0 depth는 유효한 표면 깊이가 아니다.</p>
+<h3>왜 diameter로 나눌까</h3>
+<p>2cm라는 거리도 작은 물체와 큰 물체에서는 의미가 다르다. 직경 d=0.1m일 때 상대 위치 0.02m를 d로 나누면 0.2라는 무차원 비율이 된다. 속도 0.1m/s를 d로 나누면 1/s다. 법선은 표면의 방향을 나타내는 단위벡터라 translation을 더하지 않고 회전만 적용한다. 속도 벡터도 점의 위치가 아니므로 좌표계 변환에서 translation을 더하지 않는다. 이 정규화가 모든 물체 크기에 대한 일반화를 자동 보장하는 것은 아니다.</p>
+<h3>회전 출력 세 숫자를 어떻게 이해할까</h3>
+<p>현재 decoder는 axis-angle 벡터를 쓴다. 벡터의 방향은 회전축, 길이는 회전각(rad)이다. <code>[0, 0, π/2]</code>는 Z축 90° 회전이다. Euler의 roll/pitch/yaw 세 숫자와 같은 표현이 아니다. 또한 <strong>6D pose</strong>와 일부 논문에서 말하는 <strong>6D rotation representation</strong>은 다른 용어다. 현재 코드의 rotation 출력은 3개다.</p>
+<pre><code>현재 geometry.decode_pose의 규칙:
+r = tanh(rotation_head_output) · rot_normalizer
+R_new = Exp(r) · R_hypothesis
+
+normalize_xyz=True : Δt = translation_head_output · diameter/2
+normalize_xyz=False: Δt = tanh(translation_head_output) · trans_normalizer
+t_new = t_hypothesis + Δt</code></pre>
+<p>Head의 raw output은 바로 m나 degree가 아니다. 저장된 upstream config를 통해 해석해야 한다. 이 decoder는 rotation과 translation을 분리해 업데이트하므로 무조건 <code>T_new = ΔT · T_old</code>로 대체하면 안 된다. 일반적인 왼쪽 행렬곱은 기존 translation도 회전시키지만 여기서는 그렇지 않다. 18절의 기구학 world-motion 합성은 별도의 식이다.</p>
+<details><summary>연습: R=I, t=(0.1,0,1)이고 mesh 점이 (0.02,0,0)이라면?</summary><p>카메라 점은 (0.12,0,1)m다. fx=600, cx=320이면 u=392px다. “mesh 위치”와 “camera 위치”를 구분해서 계산하는 것이 목표다.</p></details>
+<p class="small">코드 대응: geometry.py의 transform/axis_angle_matrix/decode_pose, omy_sequence.py의 target, visualization.py의 project_segments. 예제 수치는 설명용이며 실제 카메라 calibration이 아니다.</p>

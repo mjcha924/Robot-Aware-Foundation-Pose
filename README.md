@@ -6,6 +6,8 @@ This branch integrates the measured-state OMY dataset reader with the robot-cond
 Start with [5080 execution commands](docs/RUN_ON_5080.md) and download/open the
 [self-contained Korean learning guide](docs/OMY_TRAINING_GUIDE.html) in a browser.
 The guide explains the architecture, data flow, training loop, checkpoints and evaluation.
+For first-time learners, sections 22–26 add pose math, gradient exercises, attention,
+execution gates and a study path checked against code and primary references.
 See [motion-prior baselines and experiment order](docs/OMY_MOTION_BASELINE_EXPERIMENTS.md)
 for matched initialization, CPU kinematics, pretrained refinement and learned comparisons.
 Use the [tracking visualization guide](docs/OMY_TRACKING_VISUALIZATION.md) to overlay

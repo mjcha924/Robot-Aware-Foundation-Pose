@@ -1,0 +1,50 @@
+<p class="lead">처음 실행할 때의 목표는 최고 성능이 아니라, 입력·출력·학습·평가가 올바르게 이어지는지 확인하는 것이다. 아래 관문을 통과한 뒤 다음 단계로 간다.</p>
+<h3>명령어를 읽기 위한 최소 지식</h3>
+<p>모든 명령은 저장소 최상위, 즉 <code>scripts/</code>와 <code>docs/</code>가 보이는 디렉터리에서 실행한다. <code>python</code>은 현재 활성화한 환경의 Python이다. <code>python -m pip</code>는 그 Python에 패키지를 설치한다. 가상환경 이름은 각 컴퓨터에서 다르므로 문서가 임의로 활성화해주지 않는다.</p>
+<p><code>export OMY_WORK="..."</code>는 해당 terminal session에서 쓸 경로 변수다. 새 terminal에서는 다시 설정해야 한다. <code>$PWD</code>는 현재 디렉터리이며 코드 저장소에서 지정해야 의도한 output 경로가 된다. 예시의 <code>/home/a09/...</code>는 본인 머신의 실제 경로로 바꾼다. 줄 끝의 <code>\</code>는 다음 줄까지 한 명령이라는 뜻이고, 그 뒤에 공백을 붙이지 않는다. <code>--execute</code> 없이 계획만 출력하는 것은 run_omy_training/run_omy_comparison의 기능이며, 모든 scripts에 통하는 규칙은 아니다.</p>
+<div class="callout">현재 안내는 <strong>Linux + 작동하는 FoundationPose CUDA 환경</strong>을 전제로 한다. Windows native/WSL에서의 실행은 이 브랜치로 검증하지 않았다. 이 HTML은 5080 환경 자동 설치기나 호환성 보증이 아니다. CUDA tensor 연산이 성공해도 renderer/native extension이 실패할 수 있어서 smoke가 필요하다.</div>
+<h3>성공 기준과 다음 행동</h3>
+<div class="table"><table><thead><tr><th>관문 / 안내 위치</th><th>무엇이 실행되나</th><th>확인하고 넘어갈 기준</th></tr></thead><tbody>
+<tr><td>환경·파일 / 10절 1~4</td><td>GPU/Python, dataset와 weights 경로, 계획 출력</td><td>파일이 실제 존재하고 올바른 Python에서 CUDA tensor 연산 성공. readiness의 exit 0만으로 rendering 성공을 뜻하지 않는다.</td></tr>
+<tr><td>smoke / 10절 5</td><td>공식 checksum, 실제 pretrained 출력·gradient, A/B/C crop과 frozen feature 생성</td><td>traceback 없이 완료. smoke-train/manifest.json에 최대 6개 sample. 예상보다 적으면 건너뛴 hypothesis 원인을 확인.</td></tr>
+<tr><td>학습 전 baseline / 19절 5~6</td><td>동일 초기 pose로 hold, kinematic, visual, kinematic-refine 추적</td><td>summary와 poses 생성. 21절 영상에서 GT·로봇 FK의 좌표가 RGB와 정합되는지 확인. 완료만으로 accuracy가 좋다는 뜻은 아니다.</td></tr>
+<tr><td>prepare / 10절 6</td><td>train, validation, tiny-train cache 저장</td><td>각 manifest의 sample 수/geometry 규약 확인. 이 과정에는 optimizer update가 없다.</td></tr>
+<tr><td>tiny / 10절 7</td><td>box A/B/C의 최대 48개 train sample, 20 epochs</td><td>NaN 없이 train error의 시작·끝과 추세를 확인. 전반적으로 줄지 않으면 입력/gradient부터 점검. 임의의 “몇 mm 이하면 통과” 기준은 아직 없다.</td></tr>
+<tr><td>pilot / 10절 8, 19절 7</td><td>동일 cache/seed/schedule의 visual-only와 geometry 학습</td><td>둘의 one-step validation과 동일 rollout을 함께 비교. baseline 대비 개선이 추가 학습 덕인지 robot 정보 덕인지 구분.</td></tr>
+<tr><td>motion / 10절 9, 19절 7</td><td>별도 temporal cache의 visual/geometry/motion 학습</td><td>같은 temporal cache끼리 비교. macro error·A/B/C·마지막 frame 오차·시각화로 판단.</td></tr>
+</tbody></table></div>
+<p><strong>중요: 이 단계들은 checkpoint를 자동으로 이어받는 연속 학습이 아니다.</strong> Tiny 결과가 pilot에 자동 입력되지 않고, geometry pilot 결과가 motion에 자동 입력되지 않는다. 현재 실행기는 매 실험에서 동일 pretrained heads로 시작하고 새 모듈을 초기화한다. 이는 비교 조건을 맞추기 위한 독립 실험이다. 학습 상태를 이어받는 것은 별도의 <code>--resume</code> 실행이다.</p>
+<p>Tiny의 train sample은 최대 48개지만 validation에는 준비된 validation cache 전체를 사용한다. 따라서 GPU 작업 전체가 “48개만 처리한다”는 뜻은 아니다. geometry cache의 최대 수는 train 1,926 / validation 478이며, previous hypothesis cache는 train 1,925 / validation 478이다. 이는 고정 manifest와 stride 5로 계산한 상한이며 카메라 뒤 hypothesis를 건너뛰면 줄어든다.</p>
+<h3>실제 sample 수와 로그를 읽는 명령</h3>
+<p>아래 두 명령은 GPU 학습을 새로 시작하지 않는 읽기 전용 확인이다. prepare/tiny 완료 뒤 같은 terminal에서 실행한다. 마지막 로그 평균이 항상 첫 epoch보다 작아야 한다는 자동 판정은 하지 않는다.</p>
+<pre><code>python - &lt;&lt;'PY'
+import json, os
+from pathlib import Path
+work = Path(os.environ['OMY_WORK'])
+for name in ['smoke-train', 'tiny-train', 'train', 'validation']:
+    path = work / name / 'manifest.json'
+    if path.is_file():
+        manifest = json.loads(path.read_text())
+        print(name, 'samples=', len(manifest['samples']),
+              'geometry=', manifest.get('geometry_version'))
+PY
+
+python - &lt;&lt;'PY'
+import json, os
+from pathlib import Path
+path = Path(os.environ['OMY_WORK']) / 'run-tiny-geometry' / 'metrics.jsonl'
+rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+for row in rows:
+    print('epoch', row['epoch'],
+          'train(mm)', round(row['train_surface_error_m'] * 1000, 3),
+          'val(mm)', round(row['val_surface_error_m'] * 1000, 3))
+PY</code></pre>
+<h3>생성되는 파일을 잃지 않기</h3>
+<p><code>cache/heads.pt</code>는 원본 pretrained heads의 출발 weight이고, <code>run-.../best.pt</code>는 학습 결과다. 이름이 비슷해도 역할이 다르다. Cache의 각 sample .pt에는 정답도 들어 있으므로 추론 관측 파일처럼 취급하지 않는다.</p>
+<p>학습 checkpoint에는 새 모듈과 pose heads, optimizer, epoch, best loss, config, train provenance, torch RNG 상태가 들어간다. <strong>Frozen visual encoder의 weight는 들어 있지 않다.</strong> 실제 RGB-D 추론에는 pinned FoundationPose 코드와 원본 pretrained weights가 여전히 필요하며, 저장된 weight hash와 같아야 한다. Checkpoint 파일 한 개를 복사했다고 독립 실행 모델이 완성되지는 않는다.</p>
+<p><code>best.pt</code>는 cache의 one-step validation loss가 가장 낮았던 시점, <code>last.pt</code>는 마지막 완료 epoch다. Tracker 성능의 best는 rollout으로 따로 판단한다. Resume의 <code>--epochs 40</code>은 40번을 추가한다는 뜻이 아니라 전체 epoch index 0~39까지 진행한다는 뜻이다. Optimizer state를 복원하므로 CLI의 새 lr/head-lr가 자동으로 적용되는 설정 변경용 경로도 아니다. 같은 cache/mode/batch/warmup 설정을 유지한다.</p>
+<p>Ctrl+C는 현재 epoch 중간 상태를 저장해주지 않는다. 완료된 checkpoint부터 새 output 디렉터리에서 재개한다. 현재 실행기에는 이미 완료한 stage를 자동으로 찾아 건너뛰는 resume 기능이 없다. HTML 10절과 19절에 중복된 명령을 두 번 실행하지 말고 완료한 단계는 넘어간다.</p>
+<h3>실험 기록과 지표를 해석하기</h3>
+<p>실제로 동작한 환경에서는 <code>python -m pip freeze &gt; "$OMY_WORK/environment.txt"</code>, <code>nvidia-smi &gt; "$OMY_WORK/gpu.txt"</code>, <code>git rev-parse HEAD &gt; "$OMY_WORK/code_commit.txt"</code>를 기록할 수 있다. work가 생성된 뒤 실행하며 이 기록 자체가 완전한 환경 재현이나 성능 측정은 아니다.</p>
+<p>Train loss는 epoch 도중 바뀌는 weight와 활성 dropout으로 계산되고, validation loss는 epoch 끝 weight와 eval 모드로 계산된다. 그러므로 validation이 train보다 작다는 것만으로 leakage라고 단정할 수 없다. 같은 물리 rollout이 split 사이에 섞이는 문제는 별도로 검사한다.</p>
+<p>Loss가 줄어도 unseen sequence의 tracking이 좋아졌다는 뜻은 아니다. Train은 fitting, validation은 설정 선택, test는 선택 후 독립 측정이다. 현재 validation을 보고 반복해서 고른 결과는 독립 test가 아니다. 9개 clip의 macro 평균은 긴 clip에 가중하지 않지만 B/C가 같은 physical parent일 수 있어 표본 9개가 모두 독립인 것도 아니다.</p>

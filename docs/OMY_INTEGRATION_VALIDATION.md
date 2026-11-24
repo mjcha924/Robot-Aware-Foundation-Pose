@@ -28,8 +28,14 @@ CLI smoke/motion 실행 계획 출력과 Python 구문 검사, git diff whitespa
 
 이 검증은 GPU에서 원본 FoundationPose를 실제로 돌린 검증이 아니다. CUDA gate 한 개는 CPU 환경 때문에 skip했다. 실험 명령과 HTML은 최신 규약으로 갱신했다.
 
-HTML은 21개 절로 확장했으며 desktop/mobile 가로 넘침, 학습 단계 버튼, 계산기, JavaScript 오류와 신규 실험 명령 포함 여부를 확인했다. `python scripts/build_omy_training_guide.py`로 문서 소스에서 재생성할 수 있다.
+HTML은 26개 절로 확장했으며 desktop/mobile 가로 넘침, 학습 단계 버튼, 계산기, JavaScript 오류와 신규 실험 명령 포함 여부를 확인했다. `python scripts/build_omy_training_guide.py`로 문서 소스에서 재생성할 수 있다.
 
 ## 추적 시각화 검증
 
 추가 9개 테스트는 OpenCV 좌표계 투영, 화면/near-plane clipping, GT object-root → raw mesh offset, 측정 FK와 simulator link GT 분리, prediction frame 순서/부분 결과 검사, provenance 불일치, PNG 저장과 입력 보존, no-GT 모드, 실제 CPU MP4 encode/decode를 포함한다. MP4 검사에는 임시 환경의 imageio-ffmpeg 0.6.0을 사용했다. `requirements-visualization.txt`를 설치하지 않으면 MP4 테스트는 별도 skip될 수 있다. 실제 OMY 데이터 overlay 정합은 아직 확인 전이다.
+
+## 입문 설명과 정확성 검토
+
+2026-11-24: 학습/모델 코드를 변경하지 않고 HTML 22~26절을 보완했다. Pose 좌표계와 decoder, scalar SGD 숫자 예제, 실제 loss·AdamW 설정, frozen/eval/dropout, mixed robot+CAD tokens, 독립 실험과 resume, checkpoint 구성은 현재 소스와 대조했다. 원론은 FoundationPose·PointNet++·Attention 논문, Modern Robotics, PyTorch 2.8 공식 문서를 확인했다. 실제 학습/GPU 결과는 추가하지 않았다.
+
+기본 parameter 수(새 부분 1,413,953 / heads 3,159,046), head dropout 0.1, fusion attention dropout 0, AdamW 기본값과 geometry/temporal sample 수를 CPU로 확인했다. HTML의 SGD learning-rate 계산(0, 0.1, 0.25, 0.6), 기존 stepper/계산기, 목차 anchor, desktop/mobile 배치와 신규 shell 예제 구문을 검증했다. 이 문서 검토가 기존 88개 코드 테스트나 실제 5080 검증을 새로 대체하지 않는다. 신규 본문 소스는 docs/guide/*.html이며 최종 결과는 여전히 외부 자산 없는 단일 HTML이다.

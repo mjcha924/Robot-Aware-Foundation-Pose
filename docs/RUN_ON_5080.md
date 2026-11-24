@@ -55,7 +55,7 @@ python scripts/run_omy_training.py --dataset "$OMY_DATASET" \
 
 ## 5 첫 GPU 검증
 
-전체 공식 checksum 검증 → 원본 출력 일치와 gradient 검사 → A/B/C 각 2개 실제 sample cache 생성 순서다. 마지막까지 성공하면 총 6개 sample이 만들어진다. 자동 검사는 이미지 overlay를 사람이 검토한 것을 대신하지 않는다.
+전체 공식 checksum 검증 → 원본 출력 일치와 gradient 검사 → A/B/C 각 2개 실제 sample cache 생성 순서다. 최대 6개 sample이 만들어진다. smoke-train/manifest.json의 실제 수를 확인하고 더 적다면 건너뛴 hypothesis 원인을 확인한다. 자동 검사는 이미지 overlay를 사람이 검토한 것을 대신하지 않는다.
 
 ```bash
 python scripts/run_omy_training.py --dataset "$OMY_DATASET" \
@@ -74,6 +74,8 @@ python scripts/run_omy_training.py --dataset "$OMY_DATASET" \
 ```
 
 출력은 train 1,926개, validation 478개, tiny-train 최대 48개다. 현재 perturbation 설정에서 카메라 뒤쪽 hypothesis는 건너뛰므로 실제 수는 이보다 작을 수 있다. 이 단계는 학습이 아니라 rendering과 frozen feature 추출이다.
+
+Tiny, pilot, motion은 독립적인 비교 실험이며 이전 단계 checkpoint를 자동으로 이어받지 않는다. 명시적인 --resume만 학습을 재개한다.
 
 ## 7 처음 하는 작은 학습
 

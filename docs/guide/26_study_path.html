@@ -1,0 +1,26 @@
+<p class="lead">이론을 모두 공부한 다음 시작할 필요는 없다. 각 단원을 읽고 작은 계산이나 코드 한 구간을 설명할 수 있는지 확인한 뒤 다음으로 넘어가자.</p>
+<div class="table"><table><thead><tr><th>학습 순서</th><th>읽을 곳</th><th>이해했다고 볼 기준</th></tr></thead><tbody>
+<tr><td>1. 문제와 데이터</td><td>01~03, 06절</td><td>우리가 로봇 policy나 object detector 전체를 학습하는 것이 아니라 pose refiner를 학습함을 설명한다. Input과 GT를 구분한다.</td></tr>
+<tr><td>2. 좌표·기하</td><td>22절 → 05, 18절</td><td>mesh 점을 camera로 옮기고 pixel로 투영한다. velocity에는 translation을 더하지 않는 이유를 설명한다.</td></tr>
+<tr><td>3. 학습 원리</td><td>23절 → 07~09절</td><td>forward, loss, backward, step의 차이를 설명하고 scalar 예제의 gradient를 계산한다.</td></tr>
+<tr><td>4. 실제 아키텍처</td><td>24절 → 04, 11절</td><td>[B,768,11]에서 [B,32,512]까지의 의미, Q/K/V의 출처, frozen 경계를 설명한다.</td></tr>
+<tr><td>5. 첫 실행</td><td>25절 → 10, 19, 21절</td><td>단계별 출력 파일과 다음 단계로 넘어갈 근거를 확인한다. 실행 명령을 무조건 전부 반복하지 않는다.</td></tr>
+<tr><td>6. 연구 판단</td><td>12~13, 20절</td><td>원본 대비 개선과 robot 정보의 이득을 구분하고, 간단한 baseline이 충분할 가능성도 평가한다.</td></tr>
+</tbody></table></div>
+<h3>논문·공식 문서는 무엇을 확인하며 읽을까</h3>
+<p><a href="https://modernrobotics.northwestern.edu/nu-gm-book-resource/3-3-1-homogeneous-transformation-matrices/">Modern Robotics 3.3.1</a>에서는 좌표 변환의 곱셈 순서를 확인한다. <a href="https://docs.pytorch.org/docs/2.8/notes/autograd.html">PyTorch autograd</a>에서는 requires_grad/no_grad/eval의 차이를 확인한다. <a href="https://docs.pytorch.org/docs/2.8/generated/torch.optim.AdamW.html">AdamW</a>에서는 우리 trainer가 생략한 기본 설정과 optimizer state를 확인한다.</p>
+<p><a href="https://arxiv.org/abs/1706.02413">PointNet++</a>에서는 왜 전체 point cloud를 한 번에 요약하지 않고 local 영역을 단계적으로 모으는지 본다. <a href="https://arxiv.org/html/1706.03762v7#S3.SS2">Attention 논문 3.2절</a>에서는 Q/K/V와 softmax 식을 이해한다. <a href="https://arxiv.org/abs/2312.08344">FoundationPose</a>에서는 registration, refinement, tracking의 관계와 model-based/model-free 조건을 구분한다. 먼저 필요한 부분부터 읽고 실험 표 전체를 외우려 하지 않아도 된다.</p>
+<p>일반 이론의 근거는 위 문헌이고, “우리 모델의 token 수·학습률·freeze 방식·출력 파일”의 기준은 해당 브랜치 코드다. PyTorch 2.8 문서는 이번 CPU 검증 환경과 맞춰 확인한 버전이며 5080 환경을 2.8로 강제 설치하라는 뜻은 아니다. 데이터 규모는 저장소의 pinned pilot manifest를 기준으로 계산했다.</p>
+<h3>이번 정확성 검토에서 명확히 고친 부분</h3>
+<ul>
+<li>RobotEncoder의 32개 token에는 robot와 object CAD가 함께 들어간다. 순수 robot-only 표현으로 설명하지 않는다.</li>
+<li>Tiny heads의 weight freeze와 eval 모드를 구분했다. Train 중 head dropout은 켜져 있다.</li>
+<li>Motion은 local state의 유한차분 속도 입력이다. 긴 sequence를 보는 neural memory나 GT contact gate는 없다.</li>
+<li>Tiny → pilot → motion은 실험 순서다. 이전 단계의 checkpoint를 자동으로 이어받지 않는다.</li>
+<li>best.pt는 frozen visual encoder를 포함하지 않으며 one-step 기준으로 선정된다.</li>
+<li>기존 본문의 최대 sample 수·geometry 규약·oracle 초기화 예외·독립 test 부재를 현재 코드와 대조했다.</li>
+</ul>
+<p>이 검토는 학습 성공을 새로 실측한 것이 아니다. 실제 데이터 checksum, calibration/영상 정합, 5080 renderer 호환성, loss 감소, baseline 대비 성능 향상은 실행 결과가 필요하다. 문서에서 “이론으로 기대하는 효과”, “코드로 구현된 동작”, “실험으로 확인한 사실”을 서로 바꾸어 읽지 않는 것이 중요하다.</p>
+<details><summary>종합 문제 1: 원본보다 좋아졌고 visual-ft와는 같다면 무엇을 주장할 수 있나?</summary><p>추가 학습의 이득일 수 있다. Robot 정보를 넣었기 때문이라고 결론내리기에는 증거가 부족하다. 같은 cache·heads 일정의 visual control과 비교하는 이유다.</p></details>
+<details><summary>종합 문제 2: 기구학 prior가 B에서는 좋고 A/C에서는 나쁘다면?</summary><p>항상 rigid grasp라는 가정이 특정 구간에서만 맞는다는 설명과 일치할 수 있다. 먼저 영상과 구간별 오차로 확인한다. 다음 연구 후보는 관측으로 prior의 신뢰도를 판단하는 모델이지만, 이번 구현에 그런 gate가 이미 있는 것은 아니다.</p></details>
+<details><summary>종합 문제 3: Tiny loss가 줄었으니 바로 논문 성능표를 만들어도 될까?</summary><p>아니다. Tiny는 fitting/gradient 경로 진단이다. 같은 초기화의 validation rollout과 baseline을 비교하고, 최종 주장에는 별도의 test rollout이 필요하다.</p></details>
