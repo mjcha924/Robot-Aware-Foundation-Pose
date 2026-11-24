@@ -8,9 +8,11 @@ Start with [5080 execution commands](docs/RUN_ON_5080.md) and download/open the
 The guide explains the architecture, data flow, training loop, checkpoints and evaluation.
 See [motion-prior baselines and experiment order](docs/OMY_MOTION_BASELINE_EXPERIMENTS.md)
 for matched initialization, CPU kinematics, pretrained refinement and learned comparisons.
+Use the [tracking visualization guide](docs/OMY_TRACKING_VISUALIZATION.md) to overlay
+predicted pose, GT and measured robot FK on RGB videos (CPU MP4/PNG).
 Old feature caches/checkpoints must be rebuilt for the deterministic geometry convention.
 
-Local CPU tests: 79 passed, 1 CUDA test skipped. Real OMY CUDA rendering and training
+Local CPU tests: 88 passed, 1 CUDA test skipped. Real OMY CUDA rendering and training
 remain to be verified on the GPU machine. Raw datasets and pretrained weights are not
 included. The historical baseline records below describe earlier project checkpoints.
 

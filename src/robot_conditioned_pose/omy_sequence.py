@@ -67,6 +67,11 @@ class OmySequence:
             raise ValueError(f'Unknown effector link {link!r}; available: {sorted(links)}')
         return tensor(links[link])
 
+    def robot_link_poses(self, i):
+        """Camera-frame measured FK for diagnostics; never simulator link truth."""
+        camera_world = np.linalg.inv(self.frames[i]['T_world_camera'])
+        return {name: camera_world @ pose for name, pose in self._world_links(i).items()}
+
     def _surface_pair(self, i):
         current = self.frames[i]
         previous = self.frames[i-1] if i else self.previous_state

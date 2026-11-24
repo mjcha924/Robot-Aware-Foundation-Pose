@@ -1,0 +1,3 @@
+# Install alongside requirements-training.txt in the existing Python environment.
+# The imageio-ffmpeg wheel supplies an FFmpeg executable for CPU MP4 encoding.
+imageio-ffmpeg>=0.5

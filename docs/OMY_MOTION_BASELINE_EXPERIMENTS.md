@@ -186,3 +186,5 @@ hold/kinematic은 CPU로 실행할 수 있다. visual/kinematic-refine 및 learn
 baseline suite는 9개 × 4개 방법이며, learned checkpoint를 하나 추가할 때 9개 rollout이 추가된다. temporal 기본 비교는 7개 방법 × 9개 = 63개 sequence rollout이다. validation 2,382프레임에서 초기화 9개를 제외한 2,373개 frame을 방법별로 추적한다. visual 계열의 기본 iteration은 2이므로 순차 평가 시간이 학습 시간보다 길 수 있다. 먼저 한 B clip으로 실제 시간을 측정한다.
 
 CPU 합성 테스트는 좌표계·입력 누출 방지·파일 출력·집계·경로 이동·diameter 재현성의 논리를 확인한다. 실제 CAD/관절 보정의 정확성, raw dataset checksum, CUDA rendering, 실제 학습 수렴, 5080 VRAM 및 성능 개선은 GPU 머신에서 확인해야 한다. 성공 수치는 실행 후 생성되는 결과만 보고한다.
+
+영상으로 추적을 검사하려면 OMY_TRACKING_VISUALIZATION.md 또는 단일 HTML 21절을 따른다. 저장된 poses.jsonl에서 RGB / 추정+GT / robot FK / 전체 겹침 MP4와 PNG를 생성한다.

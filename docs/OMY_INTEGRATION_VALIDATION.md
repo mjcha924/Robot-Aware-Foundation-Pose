@@ -1,6 +1,6 @@
 # OMY 통합 검증 기록
 
-2026년 11월 24일 로컬 CPU 검증: `79 passed, 1 skipped`. 격리된 임시 Python 3.9 환경, torch 2.8.0, numpy 2.0.2, scipy 1.13.1을 사용했다. 이는 GPU 환경 dependency lock이 아니다.
+2026년 11월 24일 로컬 CPU 검증: `88 passed, 1 skipped`. 격리된 임시 Python 3.9 환경, torch 2.8.0, numpy 2.0.2, scipy 1.13.1을 사용했다. 이는 GPU 환경 dependency lock이 아니다.
 
 기존 테스트는 surrogate encoder를 통한 gradient, 작은 학습, checkpoint 및 resume를 포함한다. 추가 테스트는 실제 FK 코드에 합성 관절 inventory/mesh를 제공하여 다음을 확인한다.
 
@@ -28,4 +28,8 @@ CLI smoke/motion 실행 계획 출력과 Python 구문 검사, git diff whitespa
 
 이 검증은 GPU에서 원본 FoundationPose를 실제로 돌린 검증이 아니다. CUDA gate 한 개는 CPU 환경 때문에 skip했다. 실험 명령과 HTML은 최신 규약으로 갱신했다.
 
-HTML은 20개 절로 확장했으며 desktop/mobile 가로 넘침, 학습 단계 버튼, 계산기, JavaScript 오류와 신규 실험 명령 포함 여부를 확인했다. `python scripts/build_omy_training_guide.py`로 문서 소스에서 재생성할 수 있다.
+HTML은 21개 절로 확장했으며 desktop/mobile 가로 넘침, 학습 단계 버튼, 계산기, JavaScript 오류와 신규 실험 명령 포함 여부를 확인했다. `python scripts/build_omy_training_guide.py`로 문서 소스에서 재생성할 수 있다.
+
+## 추적 시각화 검증
+
+추가 9개 테스트는 OpenCV 좌표계 투영, 화면/near-plane clipping, GT object-root → raw mesh offset, 측정 FK와 simulator link GT 분리, prediction frame 순서/부분 결과 검사, provenance 불일치, PNG 저장과 입력 보존, no-GT 모드, 실제 CPU MP4 encode/decode를 포함한다. MP4 검사에는 임시 환경의 imageio-ffmpeg 0.6.0을 사용했다. `requirements-visualization.txt`를 설치하지 않으면 MP4 테스트는 별도 skip될 수 있다. 실제 OMY 데이터 overlay 정합은 아직 확인 전이다.
