@@ -27,11 +27,13 @@ v = fy · Y/Z + cy
 <p>현재 decoder는 axis-angle 벡터를 쓴다. 벡터의 방향은 회전축, 길이는 회전각(rad)이다. <code>[0, 0, π/2]</code>는 Z축 90° 회전이다. Euler의 roll/pitch/yaw 세 숫자와 같은 표현이 아니다. 또한 <strong>6D pose</strong>와 일부 논문에서 말하는 <strong>6D rotation representation</strong>은 다른 용어다. 현재 코드의 rotation 출력은 3개다.</p>
 <pre><code>현재 geometry.decode_pose의 규칙:
 r = tanh(rotation_head_output) · rot_normalizer
-R_new = Exp(r) · R_hypothesis
+ΔR = Exp(r)ᵀ      # 표준 axis-angle 회전행렬의 transpose
+R_new = ΔR · R_hypothesis
 
 normalize_xyz=True : Δt = translation_head_output · diameter/2
 normalize_xyz=False: Δt = tanh(translation_head_output) · trans_normalizer
 t_new = t_hypothesis + Δt</code></pre>
+<p>ΔR에 transpose가 붙는 이유: upstream FoundationPose는 <code>so3_exp_map(r).permute(0, 2, 1)</code>를 쓴다. pytorch3d의 so3_exp_map은 표준 Rodrigues 회전 Exp(r)이므로 upstream의 ΔR은 그 transpose, 즉 같은 축으로 반대 방향 회전이다. 초기 코드는 Exp(r)을 그대로 써서 pretrained head와 반대로 회전했다. 2026-11-26 GPU parity 검사에서 발견해 고쳤고(<code>geometry.decode_pose</code>), scipy 기준 회귀 테스트가 있다. 수정 전에 만든 cache·checkpoint는 재사용하지 않는다.</p>
 <p>Head의 raw output은 바로 m나 degree가 아니다. 저장된 upstream config를 통해 해석해야 한다. 이 decoder는 rotation과 translation을 분리해 업데이트하므로 무조건 <code>T_new = ΔT · T_old</code>로 대체하면 안 된다. 일반적인 왼쪽 행렬곱은 기존 translation도 회전시키지만 여기서는 그렇지 않다. 18절의 기구학 world-motion 합성은 별도의 식이다.</p>
 <details><summary>연습: R=I, t=(0.1,0,1)이고 mesh 점이 (0.02,0,0)이라면?</summary><p>카메라 점은 (0.12,0,1)m다. fx=600, cx=320이면 u=392px다. “mesh 위치”와 “camera 위치”를 구분해서 계산하는 것이 목표다.</p></details>
 <p class="small">코드 대응: geometry.py의 transform/axis_angle_matrix/decode_pose, omy_sequence.py의 target, visualization.py의 project_segments. 예제 수치는 설명용이며 실제 카메라 calibration이 아니다.</p>
