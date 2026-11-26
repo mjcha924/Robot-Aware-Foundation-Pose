@@ -1,0 +1,12 @@
+<p class="lead">2026-11-27 RTX 5080 실행 결과. <strong>FK 입력은 시뮬레이터 링크 GT와 수치 정밀도 수준으로 일치했다(PASS).</strong> 같은 temporal 조건의 3-seed 비교에서 로봇+CAD(geometry)는 <strong>부분 가림</strong>에서 CAD-only와 visual-ft보다 3/3 seed 모두 좋았다. <strong>완전 가림</strong>은 seed마다 순위가 바뀌어 아직 판별할 수 없다.</p>
+<div class="callout">모든 추적 수치는 첫 프레임 GT 초기화(oracle-first-frame)다. 9개 validation을 checkpoint 선택과 평가에 함께 썼다. 가림 근거는 사실상 시퀀스 2개(cylinder_A_04, cylinder_C_04)다. 자세한 표: docs/OMY_FK_AUDIT_RESULTS.md, docs/OMY_CAD_ABLATION_RESULTS.md.</div>
+<div class="table"><table><thead><tr><th>방법 (seed 평균 [범위], mm)</th><th>전체 9개</th><th>쉬운 7개</th><th>cylinder_A_04 부분 가림</th><th>cylinder_C_04 완전 가림</th><th>놓침</th></tr></thead><tbody>
+<tr><td>kinematic-refine (학습 없음)</td><td>3.23</td><td>2.11</td><td>3.40</td><td>10.93</td><td>0/3</td></tr>
+<tr><td>visual-ft (로봇·CAD 분기 없음)</td><td>6.76 [6.71–6.81]</td><td>1.00</td><td>5.09</td><td>48.75</td><td>3/3</td></tr>
+<tr><td>cad-only (CAD 256점만)</td><td>4.27 [2.85–6.69]</td><td>1.00</td><td>6.59 [4.70–10.07]</td><td>24.81 [8.63–47.93]</td><td>1/3</td></tr>
+<tr><td>geometry (로봇 512 + CAD 256)</td><td>2.34 [2.01–2.66]</td><td>1.02</td><td>1.45 [1.27–1.63]</td><td>12.45 [9.41–15.50]</td><td>0/3</td></tr>
+</tbody></table></div>
+<details><summary>FK 감사는 무엇을 확인했나</summary><p>측정 관절값 → FK → 표면점 → point_features라는 실제 학습 입력 경로를, frames.jsonl의 시뮬레이터 링크 pose(T_world_robot_links)와 45개 시퀀스 전 프레임에서 비교했다. 최대 오차는 링크 위치 0.00087mm, 회전 0.00012°, 표면점 속도 0.000029m/s였다. 한 프레임 지연·단위·부호 오류는 없었고, 학습 cache를 다시 계산하면 저장값과 정확히 같았다. 시뮬레이터 링크 속도는 export에 없어 pose 차분으로만 비교했다.</p></details>
+<details><summary>CAD-only는 왜 필요한 대조군인가</summary><p>CAD 점은 물체 자기 좌표계 값이라 가설 pose와 상관없이 물체마다 일정하다. CAD-only 분기는 물체 형상(종류)과 추가 파라미터만 줄 뿐, 물체나 로봇의 위치는 모른다. FoundationPose의 visual token에도 이미 CAD 렌더링이 들어간다. 그래서 CAD-only ≈ visual-ft이고 geometry만 좋다면, 개선은 분기를 붙인 효과가 아니라 로봇 정보에서 온 것으로 해석한다. cylinder_A_04에서 정확히 이 패턴이 나왔다.</p></details>
+<details><summary>완전 가림 후 남는 12–17mm 오차의 정체 (보충 분석)</summary><p>cylinder_C_04에서 물체를 놓치지 않은 run은 마지막 위치 오차가 0.1–1.1mm였다. 남은 오차는 마커 긴 축 둘레 87–175° 회전이다. 이 물체는 거의 원통이고 대칭이 선언되지 않아, 회전이 그대로 surface 오차로 잡힌다. 회복 기준(0.1 diameter ≈ 12.1mm)이 90° 회전 오차와 거의 같아서 “회복/미회복”이 90° vs 170°로 갈린다. cad-only s43만 회전까지 되찾았다(마지막 0.3mm). 이 분해는 사전 지표가 아니라 결과를 본 뒤 추가한 보충 분석이다.</p></details>
+<details><summary>아직 말할 수 없는 것</summary><ul><li>로봇 상태가 정확해서 도움이 되는지: robot-state mismatch 대조가 필요하다.</li><li>완전 가림 후 회복: 사건이 하나뿐이고 seed마다 순위가 바뀐다.</li><li>점 수(256 vs 768) 차이의 영향: cad-only-768 대조는 하지 않았다.</li><li>실사용 초기화, 독립 test, 실제 로봇 데이터.</li></ul></details>

@@ -4,6 +4,8 @@ baseline → tiny → pilot(3 seed) → motion 단계(3 seed)의 결과 정리. 
 
 **모든 추적 수치는 첫 프레임을 GT로 시작한 oracle-first-frame 조건이며, 실사용 초기화 성능이 아니다.**
 
+> 2026-11-27 후속: FK 감사(PASS)는 [OMY_FK_AUDIT_RESULTS.md](OMY_FK_AUDIT_RESULTS.md), CAD-only 대조와 가림 분석은 [OMY_CAD_ABLATION_RESULTS.md](OMY_CAD_ABLATION_RESULTS.md)에 있다. 아래 5번의 “12–17mm 오프셋”은 후속 분석에서 위치 오차가 아니라 마커 긴 축 회전 오차(위치 오차 ≤1.1mm)로 확인됐다.
+
 ## 핵심 요약
 
 **temporal cache로 학습한 geometry 모델만 3개 seed 모두에서 kinematic-refine(3.23mm)을 이겼고(2.01–2.66mm), 가림 시퀀스에서 물체를 한 번도 놓치지 않았다(0/3).**

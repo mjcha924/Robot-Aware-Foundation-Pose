@@ -1,0 +1,94 @@
+{
+  "created": "2026-11-27",
+  "handoff": "docs/OMY_NEXT_VALIDATION_HANDOFF.md",
+  "start_commit": "2c45b0f66941c00427f75f70ac5df25ce9206aa0",
+  "inputs": {
+    "dataset": "~/mj-projects/omy-tracking-dataset/outputs/omy_pilot/dataset",
+    "manifest": "configs/omy_pilot_manifest_20261124.json",
+    "cache_train": "outputs/omy_training_5080_003/motion-train",
+    "cache_val": "outputs/omy_training_5080_003/motion-validation",
+    "cache_manifest_sha256": {
+      "train": "cb18c1f53f0fe806cf9d6036e7c53e319758f22f72129b8056e0b9df4a1bf75c",
+      "validation": "9539d14305858e1e2b42effc03669320416db323131daf4a27e4bc821084cfa4"
+    },
+    "cache_built_at": "5dfe0a9 (content-identical to rebased 5f0181e)"
+  },
+  "read_only": [
+    "outputs/omy_training_5080_003",
+    "outputs/omy_comparison_5080_001",
+    "dataset"
+  ],
+  "stages": [
+    {
+      "id": "fk_audit",
+      "status": "done",
+      "output": "fk_audit/",
+      "verdict": "PASS",
+      "commit": "8f64440",
+      "command": "scripts/audit_omy_fk.py --cache motion-train --cache motion-validation --cache-stride 10"
+    },
+    {
+      "id": "cad_only_impl",
+      "status": "done",
+      "commit": "8f64440",
+      "tests": "104 passed",
+      "gpu_smoke": "tiny-train 2 epochs + cylinder_A_04 rollout (scratch, not results)"
+    },
+    {
+      "id": "train",
+      "status": "done",
+      "modes": [
+        "visual",
+        "cad-only",
+        "geometry"
+      ],
+      "seeds": [
+        42,
+        43,
+        44
+      ],
+      "settings": {
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05
+      },
+      "output": "training/temporal-{mode}-s{seed}",
+      "note": "9 runs; visual-s42/cad-only-s42 epoch times inflated by concurrent CPU jobs (FK audit, analysis). visual and geometry reproduce earlier motion-stage best-val values exactly."
+    },
+    {
+      "id": "evaluate",
+      "status": "done",
+      "protocol": "oracle-first-frame, iterations 2, eval points 4096 seed 2026",
+      "output": "evaluation/seed-{seed}",
+      "commit": "9784389",
+      "runs": 135,
+      "script": "run_geometry_and_eval.sh"
+    },
+    {
+      "id": "occlusion_analysis",
+      "status": "done",
+      "output": "analysis/",
+      "visibility": "analysis/visibility_per_frame.csv (padded-canvas amodal, validated vs earlier audit)",
+      "outputs": [
+        "analysis/matched",
+        "analysis/reference_earlier_runs",
+        "analysis/tables",
+        "analysis/videos"
+      ],
+      "supplementary": "translation/rotation decomposition added after inspecting earlier runs (not pre-registered)",
+      "videos": "analysis/videos (seed 42 cylinder_A_04/C_04 x 4 methods; cad-only s43/s44 cylinder_C_04 by stated rule; keyframes f160/f199/f250)"
+    },
+    {
+      "id": "reports",
+      "status": "done",
+      "files": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/OMY_CAD_ABLATION_RESULTS.md",
+        "docs/guide/27_validation_results.html",
+        "docs/results/omy_validation_5080_004/"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,242 @@
+{
+  "training": {
+    "temporal-cad-only-s42": {
+      "best_pt_sha256": "0e46dcc3e2f460c438f445fc76a6c8b87d82f2ef154d56b5d9c7199fc12ced54",
+      "last_pt_sha256": "50b9963e4fc6c71868916e6f872bb2513f52b7706cc70328b44c0647e67f0ac3",
+      "source_commit": "8f644409b7fff83c4de7d8c10dae17b3aed0cd88",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "scripts/analyze_occlusion_rollouts.py",
+        "scripts/measure_omy_visibility.py",
+        "scripts/summarize_cad_ablation.py"
+      ],
+      "settings": {
+        "mode": "cad-only",
+        "seed": 42,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-cad-only-s43": {
+      "best_pt_sha256": "cb8786444689e7f0e5140b18eb423a07b8541ad4221bf5c06d4f28842cb4e137",
+      "last_pt_sha256": "00e6e98a89d16a8ce189b45530daee47a8165aa6cc2aff19709dc01be18926eb",
+      "source_commit": "9784389d991c20c25084d0c5d278424654a77ca6",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/asymmetric_A_04_000036_worst.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_A_04_000120_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_C_04_000126_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/summary.json"
+      ],
+      "settings": {
+        "mode": "cad-only",
+        "seed": 43,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-cad-only-s44": {
+      "best_pt_sha256": "405a90f7d8cb0ab5bf5ef10d052b4b6dd4288d0f2044b1939a774dd9b2c50a07",
+      "last_pt_sha256": "d26d0693c97db2dcc5be8a2f34f6975a669e49df710e19e479c611be68309a65",
+      "source_commit": "9784389d991c20c25084d0c5d278424654a77ca6",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/asymmetric_A_04_000036_worst.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_A_04_000120_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_C_04_000126_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/summary.json"
+      ],
+      "settings": {
+        "mode": "cad-only",
+        "seed": 44,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-geometry-s42": {
+      "best_pt_sha256": "0e0afb7856d2bd5cdef32d334e9d6a95748346bd30942e7a61f48f64fcb1baf9",
+      "last_pt_sha256": "349bd631a6f3bd5ab44519d9c376ca5a9a1b6d56de13038d863f5ec307847717",
+      "source_commit": "9784389d991c20c25084d0c5d278424654a77ca6",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/asymmetric_A_04_000036_worst.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_A_04_000120_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_C_04_000126_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/summary.json"
+      ],
+      "settings": {
+        "mode": "geometry",
+        "seed": 42,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-geometry-s43": {
+      "best_pt_sha256": "241e4e9c5a8f45d3ff7c11e1645caf55525c373bfd4255846ac4bc7867df7c79",
+      "last_pt_sha256": "4b8251b28daab03c639eafff9da056771a3ea8e03c1f3ea986169fb203ef81e7",
+      "source_commit": "9784389d991c20c25084d0c5d278424654a77ca6",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/asymmetric_A_04_000036_worst.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_A_04_000120_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_C_04_000126_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/summary.json"
+      ],
+      "settings": {
+        "mode": "geometry",
+        "seed": 43,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-geometry-s44": {
+      "best_pt_sha256": "03ac74a66e19fe43c17aed1f37ab21e05a4a78e9184f6f9dc062693b55882777",
+      "last_pt_sha256": "eb45a82366543844e7ea3231d26426cac21bb8fd9b986f167baab5df3d61c5fd",
+      "source_commit": "9784389d991c20c25084d0c5d278424654a77ca6",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/asymmetric_A_04_000036_worst.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_A_04_000120_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_C_04_000126_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/summary.json"
+      ],
+      "settings": {
+        "mode": "geometry",
+        "seed": 44,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-visual-s42": {
+      "best_pt_sha256": "e897ff14f467138c567124b453732bdb79e502a03d57194e7d8ce6f4aa61321f",
+      "last_pt_sha256": "be0c0fca52bb40dc69e66135106bf9615048a5d6d0126c0e2d007298c1325885",
+      "source_commit": "8f644409b7fff83c4de7d8c10dae17b3aed0cd88",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [],
+      "settings": {
+        "mode": "visual",
+        "seed": 42,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-visual-s43": {
+      "best_pt_sha256": "6d4dc9a641016d7761817bb1e74dbdef0a11b8019901cc4d003072de4d535d59",
+      "last_pt_sha256": "b1048cea5f7ad824a967f5efbef8c294d470ca941c4bb2f627db099da3a588aa",
+      "source_commit": "9784389d991c20c25084d0c5d278424654a77ca6",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/asymmetric_A_04_000036_worst.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_A_04_000120_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_C_04_000126_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/summary.json"
+      ],
+      "settings": {
+        "mode": "visual",
+        "seed": 43,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    },
+    "temporal-visual-s44": {
+      "best_pt_sha256": "89250e1b300ed45594c42a749875889f99ba105442e10140d161c3dde3bf140e",
+      "last_pt_sha256": "4f1541fa2634c1ab1f162b0fa8c86edea1c3bb503acb3212555bf5621a481302",
+      "source_commit": "9784389d991c20c25084d0c5d278424654a77ca6",
+      "source_dirty_diff_sha256": null,
+      "source_untracked": [
+        "docs/OMY_FK_AUDIT_RESULTS.md",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/asymmetric_A_04_000036_worst.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_A_04_000120_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/overlays/cylinder_C_04_000126_representative.png",
+        "docs/results/omy_validation_5080_004/fk_audit/summary.json"
+      ],
+      "settings": {
+        "mode": "visual",
+        "seed": 44,
+        "epochs": 20,
+        "batch_size": 4,
+        "warmup_epochs": 0,
+        "lr": 0.0001,
+        "head_lr": 1e-05,
+        "train": "outputs/omy_training_5080_003/motion-train",
+        "val": "outputs/omy_training_5080_003/motion-validation"
+      }
+    }
+  },
+  "evaluation": {
+    "seed-42": {
+      "source_commits": [
+        "9784389d991c20c25084d0c5d278424654a77ca6"
+      ],
+      "dirty_hashes": [
+        "None"
+      ],
+      "runs": 45
+    },
+    "seed-43": {
+      "source_commits": [
+        "9784389d991c20c25084d0c5d278424654a77ca6"
+      ],
+      "dirty_hashes": [
+        "None"
+      ],
+      "runs": 45
+    },
+    "seed-44": {
+      "source_commits": [
+        "9784389d991c20c25084d0c5d278424654a77ca6"
+      ],
+      "dirty_hashes": [
+        "None"
+      ],
+      "runs": 45
+    }
+  },
+  "code_identity_note": "Training runs started at 8f64440 (visual-s42, cad-only-s42) or 9784389 (others), all with no tracked changes (dirty hash None); git diff 8f64440..9784389 changes no file under src/ nor scripts/train_robot_refiner.py, evaluate_robot_tracker.py, run_omy_comparison.py. All 135 rollouts ran at 9784389 with a clean tree; every learned rollout checkpoint hash equals its training best.pt."
+}

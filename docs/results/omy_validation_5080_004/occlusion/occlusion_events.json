@@ -1,0 +1,48 @@
+{
+  "definitions": {
+    "bins": [
+      ">=50%",
+      "20-50%",
+      "5-20%",
+      "<5%"
+    ],
+    "severe": ">=3 consecutive frames with visibility < 0.05",
+    "reappearance": "first start of >=3 consecutive frames with visibility >= 0.5 after the event",
+    "episode": "severe events with the same reappearance frame are merged",
+    "phases": "before: <=60 frames before episode start (frame 0 excluded); during: start..reappearance-1; after: reappearance..last",
+    "recovery": "first start at/after reappearance of >=5 consecutive frames with error <= 0.1 diameter",
+    "recovery_status": [
+      "recovered",
+      "not_recovered (window exists, never met)",
+      "insufficient (fewer than 5 frames remain)",
+      "no_reappearance"
+    ]
+  },
+  "episodes": {
+    "asymmetric_A_04": [],
+    "asymmetric_B_04": [],
+    "asymmetric_C_04": [],
+    "box_A_04": [],
+    "box_B_04": [],
+    "box_C_04": [],
+    "cylinder_A_04": [],
+    "cylinder_B_04": [],
+    "cylinder_C_04": [
+      {
+        "start": 129,
+        "end": 183,
+        "reappear": 199,
+        "events": [
+          [
+            129,
+            135
+          ],
+          [
+            139,
+            183
+          ]
+        ]
+      }
+    ]
+  }
+}
