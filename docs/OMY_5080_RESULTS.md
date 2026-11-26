@@ -159,3 +159,5 @@ seed 42 geometry의 cylinder_C_04 성공은 운이었다. train 끝 오차(geome
 | `outputs/omy_comparison_5080_001/videos/` | overlay 영상 |
 | `outputs/omy_training_5080_003/run-*` | checkpoint, metrics.jsonl, TensorBoard |
 | `outputs/omy_training_5080_003/pretrained_reference*.json` | pretrained one-step 기준값 |
+
+후속 검증 실행 지시서: [FK 감사 · CAD-only 대조 · 결과 판정 · 가림 분석](OMY_NEXT_VALIDATION_HANDOFF.md).
