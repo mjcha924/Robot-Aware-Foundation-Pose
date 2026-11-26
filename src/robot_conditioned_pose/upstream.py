@@ -1,6 +1,7 @@
 """Lazy GPU bridge to the pinned upstream; never changes its source files."""
 import sys
 from pathlib import Path
+import numpy as np
 import torch
 from .model import RobotConditionedRefiner
 from .geometry import decode_pose
@@ -39,10 +40,14 @@ class RenderBridge:
         # Upstream crop helpers change the GLOBAL default tensor type to CUDA.
         # Restore it, otherwise subsequent CPU-side pose/point preparation breaks.
         old_type = torch.tensor(0.).type()
+        # Upstream passes a numpy float64 diameter; its crop helper builds the
+        # box offsets from it, so they (and the K @ pts product with float64 K)
+        # stay float64. A Python float would make float32 offsets and fail.
+        diameter = np.float64(self.diameter)
         try:
             with torch.no_grad():
                 batch = make_crop_data_batch(cfg.input_resize, hypothesis, self.mesh, rgb, depth,
-                    intrinsic, cfg.crop_ratio, xyz, mesh_diameter=self.diameter, cfg=cfg,
+                    intrinsic, cfg.crop_ratio, xyz, mesh_diameter=diameter, cfg=cfg,
                     glctx=self.context, mesh_tensors=self.mesh_tensors, dataset=self.predictor.dataset)
         finally:
             torch.set_default_tensor_type(old_type)
