@@ -72,6 +72,22 @@ def test_zero_rotation_gradients():
     torch.testing.assert_close(decode_pose(out, pose, torch.ones(2), cfg), pose)
 
 
+def test_decode_rotation_matches_upstream_transpose():
+    # Upstream: so3_exp_map(tanh(rot) * rot_normalizer).permute(0, 2, 1) @ R_hyp,
+    # where so3_exp_map is the standard Rodrigues exp([v]x). Checked on CPU with
+    # an independent Rodrigues implementation so no pytorch3d/CUDA is needed.
+    from scipy.spatial.transform import Rotation
+    cfg = dict(trans_rep='tracknet', rot_rep='axis_angle', trans_normalizer=.1, rot_normalizer=.35)
+    rot = torch.tensor([[0., 0., 1.], [.4, -.7, .9]])
+    out = dict(trans=torch.zeros(2, 3), rot=rot)
+    hypothesis = torch.eye(4).repeat(2, 1, 1)
+    hypothesis[1, :3, :3] = torch.as_tensor(Rotation.from_rotvec([.2, .1, -.3]).as_matrix(), dtype=torch.float32)
+    v = (rot.tanh() * cfg['rot_normalizer']).double().numpy()
+    delta = torch.as_tensor(Rotation.from_rotvec(v).as_matrix(), dtype=torch.float32).transpose(1, 2)
+    decoded = decode_pose(out, hypothesis, torch.ones(2), cfg)
+    torch.testing.assert_close(decoded[:, :3, :3], delta @ hypothesis[:, :3, :3])
+
+
 def test_tiny_overfit():
     torch.manual_seed(8); torch.set_num_threads(1)
     m = RobotConditionedRefiner(SmallRefiner(), dim=32, counts=(8, 4))

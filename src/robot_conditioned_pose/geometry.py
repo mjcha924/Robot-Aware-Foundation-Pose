@@ -54,8 +54,11 @@ def decode_pose(output, hypothesis, diameter, cfg):
         t = t * diameter[:, None] / 2
     else:
         t = t.tanh() * torch.as_tensor(cfg['trans_normalizer'], device=t.device)
-    # Upstream so3_exp_map returns row convention then transposes it.
-    rotation = axis_angle_matrix(output['rot'].float().tanh() * cfg['rot_normalizer'])
+    # Upstream predict_pose_refine applies so3_exp_map(v).permute(0, 2, 1).
+    # pytorch3d's so3_exp_map is the standard Rodrigues matrix exp([v]x) in
+    # every release (checked v0.7.5 and v0.7.8), so upstream's delta is its
+    # transpose. Using exp([v]x) directly would rotate the opposite way.
+    rotation = axis_angle_matrix(output['rot'].float().tanh() * cfg['rot_normalizer']).transpose(-1, -2)
     result = hypothesis.clone()
     result[:, :3, :3] = rotation @ hypothesis[:, :3, :3]
     result[:, :3, 3] = hypothesis[:, :3, 3] + t
