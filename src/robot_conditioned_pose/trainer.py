@@ -38,6 +38,22 @@ def batch_loss(model, b, cfg):
     return pose_loss(pose, b['target'], b['cad'], b['symmetries'])
 
 
+def open_tensorboard(root, enabled):
+    """Optional TensorBoard writer under <output>/tensorboard; logging only.
+
+    Never changes training: if the package is missing, warn and continue.
+    metrics.jsonl stays the authoritative record.
+    """
+    if not enabled:
+        return None
+    try:
+        from torch.utils.tensorboard import SummaryWriter
+    except ImportError:
+        print('TensorBoard not installed; skipping event logging (pip install tensorboard)', flush=True)
+        return None
+    return SummaryWriter(log_dir=str(Path(root) / 'tensorboard'))
+
+
 def run(args):
     if args.epochs < 1 or args.batch_size < 1 or args.warmup_epochs < 0:
         raise ValueError('invalid training counts')
@@ -67,6 +83,8 @@ def run(args):
     (root / 'run.json').write_text(json.dumps(vars(args), indent=2))
     train_loader = DataLoader(train, batch_size=args.batch_size, shuffle=True, collate_fn=collate)
     val_loader = DataLoader(val, batch_size=args.batch_size, collate_fn=collate)
+    writer = open_tensorboard(root, getattr(args, 'tensorboard', True))
+    step = start * len(train_loader)
     for epoch in range(start, args.epochs):
         model.train()
         model.set_head_training(epoch >= args.warmup_epochs)
@@ -86,6 +104,9 @@ def run(args):
             nn.utils.clip_grad_norm_(model.parameters(), 1., error_if_nonfinite=True)
             opt.step()
             total += loss.item() * len(b['visual'])
+            if writer is not None:
+                writer.add_scalar('step/train_batch_surface_error_mm', loss.item() * 1000, step)
+            step += 1
         model.eval(); valid = 0.
         with torch.no_grad():
             for raw in val_loader:
@@ -101,9 +122,25 @@ def run(args):
         print(json.dumps(record), flush=True)
         with (root / 'metrics.jsonl').open('a') as f:
             f.write(json.dumps(record) + '\n')
+        if writer is not None:
+            # x axis = epoch index, same as metrics.jsonl (starts at 0).
+            writer.add_scalar('epoch/train_surface_error_mm', record['train_surface_error_m'] * 1000, epoch)
+            writer.add_scalar('epoch/val_surface_error_mm', valid * 1000, epoch)
+            writer.add_scalar('epoch/best_val_surface_error_mm', best * 1000, epoch)
+            writer.add_scalar('epoch/seconds', record['seconds'], epoch)
+            writer.add_scalar('epoch/peak_cuda_MiB', record['peak_cuda_bytes'] / 2**20, epoch)
+            writer.add_scalar('epoch/heads_training', float(epoch >= args.warmup_epochs), epoch)
+            writer.add_scalar('lr/new_modules', opt.param_groups[0]['lr'], epoch)
+            writer.add_scalar('lr/heads', opt.param_groups[1]['lr'], epoch)
+            # Shared fusion scalar (init 0.01); a global weight, not a contact probability.
+            if hasattr(model, 'residual_scale'):
+                writer.add_scalar('model/residual_scale_alpha', model.residual_scale.item(), epoch)
+            writer.flush()
         ckpt = dict(model=model.state_dict(), optimizer=opt.state_dict(), epoch=epoch, best=best,
                     mode=args.mode, cfg=cfg, provenance=train.manifest,
                     rng_cpu=torch.get_rng_state(), rng_cuda=torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [])
         torch.save(ckpt, root / 'last.pt')
         if improved:
             torch.save(ckpt, root / 'best.pt')
+    if writer is not None:
+        writer.close()

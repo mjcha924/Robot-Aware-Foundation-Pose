@@ -90,6 +90,15 @@ python scripts/run_omy_training.py --dataset "$OMY_DATASET" \
 tail -n 5 "$OMY_WORK/run-tiny-geometry/metrics.jsonl"
 ```
 
+학습 곡선은 TensorBoard로도 볼 수 있다. 각 run 폴더의 `tensorboard/`에 기록하며 `metrics.jsonl`이 여전히 기준 기록이다. 기록하지 않으려면 `train_robot_refiner.py`에 `--no-tensorboard`를 준다.
+
+```bash
+tensorboard --logdir "$OMY_WORK" --port 6006
+# 브라우저에서 http://localhost:6006
+```
+
+`epoch/*`의 x축은 metrics.jsonl과 같은 0부터 시작하는 epoch, `step/*`은 optimizer update 횟수다. `model/residual_scale_alpha`는 모든 sample이 공유하는 fusion scalar이며 접촉 확률이 아니다.
+
 ## 8 같은 조건으로 비교 학습
 
 ```bash

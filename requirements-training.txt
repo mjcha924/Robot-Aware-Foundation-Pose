@@ -8,3 +8,5 @@ scipy
 trimesh
 Pillow
 imageio
+# Optional: training curves under <run>/tensorboard (training runs without it).
+tensorboard

@@ -19,5 +19,7 @@ if __name__ == '__main__':
     p.add_argument('--head-lr', type=float, default=1e-5)
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--resume')
+    p.add_argument('--no-tensorboard', dest='tensorboard', action='store_false',
+                   help='Do not write <output>/tensorboard event files (logging only)')
     from robot_conditioned_pose.trainer import run
     run(p.parse_args())

@@ -127,6 +127,15 @@ def test_training_entrypoint(tmp_path):
     run(args)
     ckpt = torch.load(tmp_path/'run'/'best.pt', weights_only=True)
     assert ckpt['epoch'] == 0 and ckpt['best'] >= 0
+    try:
+        import tensorboard  # noqa: F401
+    except ImportError:
+        pass  # logging is optional; training above must still succeed
+    else:
+        assert list((tmp_path/'run'/'tensorboard').glob('events.out.tfevents.*'))
+    off = Namespace(**{**vars(args), 'output': str(tmp_path/'no-tb'), 'tensorboard': False})
+    run(off)
+    assert not (tmp_path/'no-tb'/'tensorboard').exists()
     args.output = str(tmp_path/'resumed'); args.resume = str(tmp_path/'run'/'last.pt'); args.epochs = 2
     run(args)
     assert torch.load(tmp_path/'resumed'/'last.pt', weights_only=True)['epoch'] == 1
