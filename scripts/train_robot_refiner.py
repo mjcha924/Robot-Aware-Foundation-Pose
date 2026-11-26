@@ -10,7 +10,7 @@ if __name__ == '__main__':
     p.add_argument('--train', required=True)
     p.add_argument('--val', required=True)
     p.add_argument('--output', required=True)
-    p.add_argument('--mode', choices=['visual', 'geometry', 'motion'], default='motion')
+    p.add_argument('--mode', choices=['visual', 'cad-only', 'geometry', 'motion'], default='motion')
     p.add_argument('--device', default='cuda')
     p.add_argument('--epochs', type=int, default=20)
     p.add_argument('--warmup-epochs', type=int, default=0)

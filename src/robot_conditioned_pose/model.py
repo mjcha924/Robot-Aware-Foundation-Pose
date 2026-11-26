@@ -61,10 +61,31 @@ class RobotEncoder(nn.Module):
         return self.project(features) + self.position(xyz)
 
 
+MODES = ('visual', 'cad-only', 'geometry', 'motion')
+
+
+def select_cad_rows(points):
+    """Keep only object-CAD rows (is_robot channel 9 == 0), in their original order.
+
+    Rows are chosen by the flag, never by position. CAD xyz/normal and their
+    original zero robot-flag/velocity/validity channels are kept unchanged; no
+    robot rows are zeroed, padded or moved. Every sample must hold the same
+    nonzero number of CAD rows so the batch stays rectangular.
+    """
+    flag = points[..., 9]
+    if not torch.all((flag == 0) | (flag == 1)):
+        raise ValueError('is_robot channel must be exactly 0 or 1')
+    cad = flag == 0
+    counts = cad.sum(1)
+    if (counts == 0).any() or (counts != counts[0]).any():
+        raise ValueError(f'cad-only needs the same nonzero CAD row count per sample, got {counts.tolist()}')
+    return points[cad].reshape(points.shape[0], int(counts[0]), points.shape[-1])
+
+
 class RobotConditionedRefiner(nn.Module):
     def __init__(self, upstream, dim=512, counts=(128, 32), mode='motion'):
         super().__init__()
-        if mode not in ('visual', 'geometry', 'motion'):
+        if mode not in MODES:
             raise ValueError(mode)
         self.upstream, self.mode = upstream, mode
         self.robot_encoder = RobotEncoder(dim, counts)
@@ -99,6 +120,9 @@ class RobotConditionedRefiner(nn.Module):
                 points = points.clone()
                 points[..., 6:9] = 0
                 points[..., 10] = 0
+            elif self.mode == 'cad-only':
+                # Same encoder/fusion/heads as geometry; the robot rows are absent.
+                points = select_cad_rows(points)
             robot = self.robot_norm(self.robot_encoder(points))
             extra, _ = self.attention(self.visual_norm(visual), robot, robot, need_weights=False)
             fused = visual + self.residual_scale * extra

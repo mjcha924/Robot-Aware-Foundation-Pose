@@ -139,3 +139,101 @@ def test_training_entrypoint(tmp_path):
     args.output = str(tmp_path/'resumed'); args.resume = str(tmp_path/'run'/'last.pt'); args.epochs = 2
     run(args)
     assert torch.load(tmp_path/'resumed'/'last.pt', weights_only=True)['epoch'] == 1
+
+
+def _mixed_points(batch=2, robot=20, cad=12, seed=5):
+    g = torch.Generator().manual_seed(seed)
+    r = torch.randn(batch, robot, 11, generator=g) * .1
+    r[..., 9], r[..., 10] = 1, 1
+    c = torch.randn(batch, cad, 11, generator=g) * .1
+    c[..., 6:] = 0  # CAD rows: zero velocity, is_robot and validity
+    return r, c
+
+
+def test_cad_only_ignores_robot_rows_and_selects_cad_by_flag():
+    from robot_conditioned_pose.model import select_cad_rows
+    torch.manual_seed(11)
+    model = RobotConditionedRefiner(SmallRefiner(), dim=32, counts=(8, 4), mode='cad-only').eval()
+    tokens = torch.randn(2, 6, 32)
+    robot, cad = _mixed_points()
+    reference = model.forward_tokens(tokens, torch.cat((robot, cad), 1))
+    # Only CAD rows reach the encoder, in their original order.
+    torch.testing.assert_close(select_cad_rows(torch.cat((robot, cad), 1)), cad)
+    torch.testing.assert_close(model.forward_tokens(tokens, cad), reference)
+    # Moving, reversing or re-timing robot rows, or placing CAD first, changes nothing.
+    moved = robot.clone(); moved[..., :3] += 5; moved[..., 6:9] *= -30
+    torch.testing.assert_close(model.forward_tokens(tokens, torch.cat((moved.flip(1), cad), 1)), reference)
+    torch.testing.assert_close(model.forward_tokens(tokens, torch.cat((cad, robot), 1)), reference)
+    # It is a real geometric branch, unlike the visual bypass.
+    assert not torch.allclose(reference['trans'], model.forward_tokens(tokens, cad, bypass=True)['trans'])
+
+
+def test_cad_only_rejects_ambiguous_inputs():
+    from robot_conditioned_pose.model import select_cad_rows
+    robot, cad = _mixed_points()
+    uneven = torch.cat((robot, cad), 1)
+    uneven[0, -1, 9] = 1  # one sample loses a CAD row
+    with pytest.raises(ValueError):
+        select_cad_rows(uneven)
+    with pytest.raises(ValueError):
+        select_cad_rows(robot)  # no CAD rows at all
+    fractional = torch.cat((robot, cad), 1); fractional[0, 0, 9] = .5
+    with pytest.raises(ValueError):
+        select_cad_rows(fractional)
+
+
+def test_cad_only_trains_encoder_and_fusion():
+    torch.manual_seed(12)
+    model = RobotConditionedRefiner(SmallRefiner(), dim=32, counts=(8, 4), mode='cad-only')
+    model.set_head_training(False)
+    robot, cad = _mixed_points()
+    model.forward_tokens(torch.randn(2, 6, 32), torch.cat((robot, cad), 1))['trans'].square().sum().backward()
+    for module in (model.robot_encoder, model.attention):
+        assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in module.parameters())
+    assert model.residual_scale.grad is not None and model.residual_scale.grad.abs() > 0
+
+
+def test_existing_modes_unchanged_by_cad_only():
+    torch.manual_seed(13)
+    tokens = torch.randn(2, 6, 32)
+    robot, cad = _mixed_points()
+    points = torch.cat((robot, cad), 1)
+    geometry = RobotConditionedRefiner(SmallRefiner(), dim=32, counts=(8, 4), mode='geometry').eval()
+    zeroed = points.clone(); zeroed[..., 6:9] = 0; zeroed[..., 10] = 0
+    memory = geometry.robot_norm(geometry.robot_encoder(zeroed))
+    extra, _ = geometry.attention(geometry.visual_norm(tokens), memory, memory, need_weights=False)
+    fused = tokens + geometry.residual_scale * extra
+    torch.testing.assert_close(geometry.forward_tokens(tokens, points)['trans'], geometry.upstream.trans_head(fused).mean(1))
+    visual = RobotConditionedRefiner(SmallRefiner(), dim=32, counts=(8, 4), mode='visual').eval()
+    torch.testing.assert_close(visual.forward_tokens(tokens, points)['trans'], visual.upstream.trans_head(tokens).mean(1))
+
+
+def test_cad_only_checkpoint_mode_roundtrip(tmp_path):
+    import json
+    from argparse import Namespace
+    from robot_conditioned_pose.model import MODES
+    from robot_conditioned_pose.trainer import CachedHeads, run
+    assert 'cad-only' in MODES
+    torch.set_num_threads(1)
+    cfg = dict(trans_rep='tracknet', rot_rep='axis_angle', trans_normalizer=.1, rot_normalizer=.2)
+    robot, cad = _mixed_points(batch=1, robot=24, cad=16)
+    for split in ('train', 'val'):
+        folder = tmp_path / split; folder.mkdir()
+        pose = torch.eye(4)
+        torch.save(dict(visual=torch.randn(4, 512), points=torch.cat((robot, cad), 1)[0],
+            hypothesis=pose, target=pose, cad=torch.randn(8, 3) * .1, diameter=torch.tensor(.2),
+            symmetries=pose[None]), folder / '0.pt')
+        torch.save(CachedHeads().state_dict(), folder / 'heads.pt')
+        (folder / 'manifest.json').write_text(json.dumps(dict(samples=['0.pt'], cfg=cfg,
+            upstream_commit='test', weight_sha256='test', sequence_ids=[split],
+            geometry_version='exact-vertex-diameter-v1')))
+    args = Namespace(train=str(tmp_path/'train'), val=str(tmp_path/'val'), output=str(tmp_path/'run'),
+        epochs=1, batch_size=1, warmup_epochs=0, seed=1, device='cpu', mode='cad-only', lr=1e-4,
+        head_lr=1e-5, resume=None, tensorboard=False)
+    run(args)
+    saved = torch.load(tmp_path/'run'/'best.pt', weights_only=True)
+    assert saved['mode'] == 'cad-only'
+    restored = RobotConditionedRefiner(CachedHeads(), mode=saved['mode'])
+    restored.load_state_dict(saved['model'])
+    record = json.loads((tmp_path/'run'/'run.json').read_text())
+    assert record['mode'] == 'cad-only' and 'source_commit' in record

@@ -99,6 +99,7 @@ def main():
     import torch
     from robot_conditioned_pose.omy_sequence import open_sequence
     from robot_conditioned_pose.contracts import mesh_diameter, geometry_record, check_checkpoint, semantic_config
+    from robot_conditioned_pose.provenance import source_snapshot
     from robot_conditioned_pose.motion_prior import validate_pose
     np.random.seed(0); torch.manual_seed(0)
     reader = open_sequence(a.sequence)
@@ -110,7 +111,7 @@ def main():
     visual = method in ('visual', 'kinematic-refine', 'learned')
     if visual:
         from robot_conditioned_pose.upstream import load_upstream, RenderBridge
-        from robot_conditioned_pose.model import RobotConditionedRefiner
+        from robot_conditioned_pose.model import RobotConditionedRefiner, MODES
         predictor, cfg = load_upstream(ROOT / 'third_party/FoundationPose')
         model = RobotConditionedRefiner(predictor.model, mode='visual').cuda().eval()
         if a.checkpoint:
@@ -119,6 +120,8 @@ def main():
             missing, unexpected = model.load_state_dict(saved['model'], strict=False)
             if unexpected or any(not k.startswith(('upstream.encodeA.', 'upstream.encodeAB.', 'upstream.pos_embed.')) for k in missing):
                 raise ValueError((missing, unexpected))
+            if saved['mode'] not in MODES:
+                raise ValueError('unknown checkpoint mode: '+repr(saved['mode']))
             model.mode = saved['mode']
         model_mode = model.mode
         bridge = RenderBridge(predictor, reader.mesh)
@@ -144,6 +147,7 @@ def main():
         pretrained_sha256=file_hash(cfg['ckpt_dir']) if cfg else None,
         config=semantic_config(cfg) if cfg else None,
         source_commit=subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),
+        source_dirty_diff_sha256=source_snapshot()['source_dirty_diff_sha256'],
         inputs={str(f.relative_to(a.sequence)): file_hash(f) for f in input_files},
         split=ext.get('split', 'legacy'), parent_group=ext.get('parent_group'),
         first_frame_policy='supplied pose unchanged; frame 0 excluded from tracking aggregates',

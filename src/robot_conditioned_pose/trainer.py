@@ -11,6 +11,7 @@ from .model import RobotConditionedRefiner
 from .geometry import decode_pose, pose_loss
 from .data import FeatureDataset, collate, check_splits
 from .contracts import portable_provenance
+from .provenance import source_snapshot
 
 
 class CachedHeads(nn.Module):
@@ -80,7 +81,7 @@ def run(args):
         torch.set_rng_state(ckpt['rng_cpu'].cpu())
         if args.device.startswith('cuda') and ckpt['rng_cuda']:
             torch.cuda.set_rng_state_all([s.cpu() for s in ckpt['rng_cuda']])
-    (root / 'run.json').write_text(json.dumps(vars(args), indent=2))
+    (root / 'run.json').write_text(json.dumps(dict(vars(args), **source_snapshot()), indent=2))
     train_loader = DataLoader(train, batch_size=args.batch_size, shuffle=True, collate_fn=collate)
     val_loader = DataLoader(val, batch_size=args.batch_size, collate_fn=collate)
     writer = open_tensorboard(root, getattr(args, 'tensorboard', True))
