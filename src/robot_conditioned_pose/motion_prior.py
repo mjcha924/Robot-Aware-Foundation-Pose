@@ -20,7 +20,15 @@ def propagate_pose(previous_pose, previous_camera, current_camera,
     """
     if (previous_effector is None) != (current_effector is None):
         raise ValueError('both effector poses are required')
+    # Compose in float64: a pure kinematic rollout re-feeds its own output for
+    # hundreds of frames, and float32 inverse/matmul chains drifted the
+    # homogeneous row past validate_pose's 1e-5 (frame 274 of asymmetric_B_04).
+    dtype = previous_pose.dtype
+    previous_pose, previous_camera, current_camera = (
+        x.double() for x in (previous_pose, previous_camera, current_camera))
     world_mesh = previous_camera @ previous_pose
     if current_effector is not None:
-        world_mesh = current_effector @ torch.linalg.inv(previous_effector) @ world_mesh
-    return torch.linalg.inv(current_camera) @ world_mesh
+        world_mesh = current_effector.double() @ torch.linalg.inv(previous_effector.double()) @ world_mesh
+    result = torch.linalg.inv(current_camera) @ world_mesh
+    result[3] = result.new_tensor([0., 0., 0., 1.])  # exact by definition of a rigid transform
+    return result.to(dtype)

@@ -97,6 +97,33 @@ def test_rigid_motion_camera_change_and_constant_tool_offset():
     with pytest.raises(ValueError,match='both'): propagate_pose(prior,c0,c1,e0,None)
 
 
+def test_long_float32_kinematic_rollout_stays_rigid():
+    # A pure kinematic rollout feeds its own float32 output back for hundreds
+    # of frames; float32 composition drifted past validate_pose on real data.
+    from scipy.spatial.transform import Rotation
+    # Smooth wrist path ~1.3 m from a fixed camera 2.5 m up, as in the OMY pilot.
+    rng = np.random.default_rng(1)
+    def rigid(rotvec, t):
+        m = torch.eye(4)
+        m[:3,:3] = torch.as_tensor(Rotation.from_rotvec(rotvec).as_matrix(), dtype=torch.float32)
+        m[:3,3] = torch.as_tensor(t, dtype=torch.float32)
+        return m
+    frames = 1000
+    rotvec = np.cumsum(rng.normal(scale=.03, size=(frames, 3)), 0)
+    wrist = np.array([.14, -.18, 1.3]) + np.cumsum(rng.normal(scale=.003, size=(frames, 3)), 0)
+    camera = rigid([2.6, -.9, .4], [.6, -.6, 2.5])
+    effector = [rigid(rotvec[i], wrist[i]) for i in range(frames)]
+    current = torch.linalg.inv(camera) @ effector[0] @ rigid([.1, .2, .3], [0, 0, .12])
+    for i in range(1, frames):
+        current = propagate_pose(current, camera, camera, effector[i-1], effector[i])
+        assert current.dtype == torch.float32
+        # The homogeneous row is exact by construction, not merely within tolerance.
+        assert torch.equal(current[3], torch.tensor([0., 0., 0., 1.]))
+        rotation = current[:3,:3]
+        assert (rotation.T @ rotation - torch.eye(3)).abs().max() < 1e-5
+        validate_pose(current)
+
+
 def test_cached_inputs_no_repeated_io_or_fk_and_no_gt(tmp_path, monkeypatch):
     fixture(tmp_path)
     import robot_conditioned_pose.omy_sequence as module
