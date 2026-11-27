@@ -25,6 +25,7 @@ def main():
     p.add_argument('--initialization', choices=['external', 'oracle-first-frame'], required=True)
     p.add_argument('--checkpoint', action='append', required=True, metavar='LABEL=PATH')
     p.add_argument('--perturbations', nargs='+', default=DEFAULT)
+    p.add_argument('--branch-ablations', nargs='+', default=['none'], help='none | drop-robot-rows | bypass-branch')
     p.add_argument('--iterations', type=int, default=2)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--execute', action='store_true')
@@ -40,13 +41,15 @@ def main():
     for item in a.checkpoint:
         label, path = item.split('=', 1)
         if not Path(path).is_file(): raise FileNotFoundError(path)
-        for spec in a.perturbations:
+        for spec, ablation in [(s, b) for b in a.branch_ablations for s in a.perturbations]:
             for name in names:
                 if not (a.initial_poses/(name+'.npy')).is_file(): raise FileNotFoundError(name)
                 c = [sys.executable, ROOT/'scripts/evaluate_robot_tracker.py', a.dataset/name,
                      '--initial-pose', a.initial_poses/(name+'.npy'), '--initialization', a.initialization,
                      '--method', 'learned', '--checkpoint', path, '--iterations', str(a.iterations),
-                     '--robot-perturbation', spec, '--output', a.output/label/spec/name]
+                     '--robot-perturbation', spec, '--branch-ablation', ablation,
+                     '--output', a.output/label/(spec if ablation == 'none' else ablation)/name]
+                if ablation != 'none' and spec != 'none': p.error('combine ablations only with perturbation none')
                 if spec == 'swap-sequence': c += ['--robot-donor', a.dataset/donors[name]]
                 commands.append(list(map(str, c)))
     for c in commands: print(shlex.join(c), flush=True)

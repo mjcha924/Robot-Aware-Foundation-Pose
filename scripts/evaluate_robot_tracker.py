@@ -88,6 +88,8 @@ def main():
     p.add_argument('--evaluation-points', type=int, default=4096)
     p.add_argument('--robot-perturbation', default='none',
                    help='Inference-only robot-state mismatch control (see robot_perturbation.py)')
+    p.add_argument('--branch-ablation', choices=['none', 'drop-robot-rows', 'bypass-branch'], default='none',
+                   help='Inference-only: feed only CAD rows to a trained checkpoint, or skip the point branch entirely')
     p.add_argument('--robot-donor', type=Path, help='Donor sequence for --robot-perturbation swap-sequence')
     a = p.parse_args()
     method = a.method or ('learned' if a.checkpoint else 'visual')
@@ -134,15 +136,23 @@ def main():
                 raise ValueError('unknown checkpoint mode: '+repr(saved['mode']))
             model.mode = saved['mode']
         model_mode = model.mode
+        if a.branch_ablation != 'none' and model.mode not in ('geometry', 'motion'):
+            p.error('branch ablation applies to robot-conditioned checkpoints only')
         bridge = RenderBridge(predictor, reader.mesh)
+        from robot_conditioned_pose.model import select_cad_rows
+        class Bypass:
+            def eval(self): model.eval(); return self
+            def __call__(self, x, y, pts): return model(x, y, pts, bypass=True)
+        runner = Bypass() if a.branch_ablation == 'bypass-branch' else model
         initial = initial.cuda()
         def refine(i, pose):
             rgb, depth = reader.observation(i)
             # Visual controls do not need robot meshes/FK during refinement.
             def points(h):
-                return (h.new_zeros((1, 1, 11)) if model.mode == 'visual' else
-                        reader.points(i, h[0], diameter)[None])
-            return bridge.refine(model, rgb, depth, reader.K, pose[None], points, cfg, a.iterations)[0]
+                if model.mode == 'visual': return h.new_zeros((1, 1, 11))
+                p = reader.points(i, h[0], diameter)[None]
+                return select_cad_rows(p) if a.branch_ablation == 'drop-robot-rows' else p
+            return bridge.refine(runner, rgb, depth, reader.K, pose[None], points, cfg, a.iterations)[0]
     if method in ('kinematic', 'kinematic-refine'):
         reader.effector_pose(0, a.effector_link)  # fail early on wrong link
     a.output.mkdir(parents=True, exist_ok=False)
@@ -161,6 +171,7 @@ def main():
         inputs={str(f.relative_to(a.sequence)): file_hash(f) for f in input_files},
         split=ext.get('split', 'legacy'), parent_group=ext.get('parent_group'),
         robot_perturbation=perturbation.describe() if perturbation else None,
+        branch_ablation=a.branch_ablation,
         first_frame_policy='supplied pose unchanged; frame 0 excluded from tracking aggregates',
         **geometry_record(reader.mesh, diameter))
     (a.output/'run.json').write_text(json.dumps(metadata, indent=2))
