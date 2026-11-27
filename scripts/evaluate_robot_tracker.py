@@ -86,6 +86,9 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--iterations', type=int, default=2)
     p.add_argument('--evaluation-points', type=int, default=4096)
+    p.add_argument('--robot-perturbation', default='none',
+                   help='Inference-only robot-state mismatch control (see robot_perturbation.py)')
+    p.add_argument('--robot-donor', type=Path, help='Donor sequence for --robot-perturbation swap-sequence')
     a = p.parse_args()
     method = a.method or ('learned' if a.checkpoint else 'visual')
     if (method == 'learned') != bool(a.checkpoint):
@@ -105,6 +108,13 @@ def main():
     reader = open_sequence(a.sequence)
     if len(reader.frames) < 2: raise ValueError('need at least two frames')
     diameter = mesh_diameter(reader.mesh)
+    perturbation = None
+    if a.robot_perturbation != 'none' or a.robot_donor:
+        from robot_conditioned_pose.robot_perturbation import RobotPerturbation
+        if not hasattr(reader, 'set_robot_perturbation'):
+            raise ValueError('robot perturbation requires measured-state OMY data')
+        perturbation = RobotPerturbation(a.robot_perturbation, a.sequence.name, reader.joint_names, a.robot_donor)
+        reader.set_robot_perturbation(perturbation)
     initial = torch.as_tensor(np.load(a.initial_pose, allow_pickle=False), dtype=torch.float32)
     validate_pose(initial)
     refine, cfg, model_mode = None, None, None
@@ -150,6 +160,7 @@ def main():
         source_dirty_diff_sha256=source_snapshot()['source_dirty_diff_sha256'],
         inputs={str(f.relative_to(a.sequence)): file_hash(f) for f in input_files},
         split=ext.get('split', 'legacy'), parent_group=ext.get('parent_group'),
+        robot_perturbation=perturbation.describe() if perturbation else None,
         first_frame_policy='supplied pose unchanged; frame 0 excluded from tracking aggregates',
         **geometry_record(reader.mesh, diameter))
     (a.output/'run.json').write_text(json.dumps(metadata, indent=2))

@@ -48,6 +48,17 @@ class OmySequence:
             count = 512//len(links) + (index < 512 % len(links))
             self.canonical[name] = {k: v[:count] for k, v in self.canonical[name].items()}
         self._targets = None
+        self.robot_perturbation = None
+
+    def set_robot_perturbation(self, perturbation):
+        """Inference-only mismatch control; None restores the measured state."""
+        self.robot_perturbation = perturbation
+        self._world_links.cache_clear(); self._surface_pair.cache_clear()
+
+    def robot_state(self, i):
+        if self.robot_perturbation is not None:
+            return self.robot_perturbation.state(self, i)
+        return self.previous_state if i == -1 else self.frames[i]
 
     def observation(self, i):
         from PIL import Image
@@ -56,7 +67,7 @@ class OmySequence:
             return (np.asarray(rgb)[:, :, :3].copy(), np.asarray(depth, dtype=np.float32)*.001)
 
     def _world_links(self, i):
-        state = self.previous_state if i == -1 else self.frames[i]
+        state = self.robot_state(i)
         return forward_kinematics(self.inventory, self.joint_names,
                                  state['joint_positions'], state['T_world_robot_base'])
 
@@ -79,7 +90,9 @@ class OmySequence:
         if not np.isclose(dt, 1/30, atol=1e-6):
             raise ValueError('Missing or discontinuous preceding robot state')
         camera_world = np.linalg.inv(current['T_world_camera'])
-        now, old = self._world_links(i), self._world_links(i-1)
+        now = self._world_links(i)
+        zero = self.robot_perturbation is not None and self.robot_perturbation.zero_velocity
+        old = now if zero else self._world_links(i-1)
         positions, prior, normals = [], [], []
         for name, surface in sorted(self.canonical.items()):
             t, prev = camera_world @ now[name], camera_world @ old[name]
