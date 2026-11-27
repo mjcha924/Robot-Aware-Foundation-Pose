@@ -1,0 +1,65 @@
+{
+  "asymmetric_A_04": {
+    "surface_error_m": 0.0007325307233259082,
+    "translation_error_m": 0.0004003477515652776,
+    "rotation_error_deg": 0.8996164964869283,
+    "diameter_m": 0.19783543711993112,
+    "exceeds_10pct_diameter": false
+  },
+  "asymmetric_B_04": {
+    "surface_error_m": 0.0007217223756015301,
+    "translation_error_m": 0.00029221197473816574,
+    "rotation_error_deg": 0.7863386709309368,
+    "diameter_m": 0.19783543711993112,
+    "exceeds_10pct_diameter": false
+  },
+  "asymmetric_C_04": {
+    "surface_error_m": 0.008188754320144653,
+    "translation_error_m": 0.007388366851955652,
+    "rotation_error_deg": 16.361513331366975,
+    "diameter_m": 0.19783543711993112,
+    "exceeds_10pct_diameter": false
+  },
+  "box_A_04": {
+    "surface_error_m": 0.00118734547868371,
+    "translation_error_m": 0.0011395177571102977,
+    "rotation_error_deg": 0.5841680573410714,
+    "diameter_m": 0.11399708696994551,
+    "exceeds_10pct_diameter": false
+  },
+  "box_B_04": {
+    "surface_error_m": 0.0011802989756688476,
+    "translation_error_m": 0.0011404104297980666,
+    "rotation_error_deg": 0.5482264046987578,
+    "diameter_m": 0.11399708696994551,
+    "exceeds_10pct_diameter": false
+  },
+  "box_C_04": {
+    "surface_error_m": 0.0013919086195528507,
+    "translation_error_m": 0.0011386482510715723,
+    "rotation_error_deg": 1.6337461703232858,
+    "diameter_m": 0.11399708696994551,
+    "exceeds_10pct_diameter": false
+  },
+  "cylinder_A_04": {
+    "surface_error_m": 0.0014731171540915966,
+    "translation_error_m": 0.0010930004063993692,
+    "rotation_error_deg": 6.146821438372181,
+    "diameter_m": 0.1213933927444075,
+    "exceeds_10pct_diameter": false
+  },
+  "cylinder_B_04": {
+    "surface_error_m": 0.001366802491247654,
+    "translation_error_m": 0.0009254250908270478,
+    "rotation_error_deg": 5.481262737720203,
+    "diameter_m": 0.1213933927444075,
+    "exceeds_10pct_diameter": false
+  },
+  "cylinder_C_04": {
+    "surface_error_m": 0.0023764553479850292,
+    "translation_error_m": 0.001636038301512599,
+    "rotation_error_deg": 3.732660402615491,
+    "diameter_m": 0.1213933927444075,
+    "exceeds_10pct_diameter": false
+  }
+}

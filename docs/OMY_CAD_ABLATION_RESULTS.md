@@ -2,6 +2,8 @@
 
 같은 temporal cache·설정·seed(42/43/44)로 visual / cad-only / geometry(로봇+CAD)를 새로 학습하고, 같은 코드 commit에서 matched rollout으로 비교했다. 모든 추적 수치는 **첫 프레임 GT 초기화(oracle-first-frame)** 조건이고 9개 validation 시퀀스를 학습 선택(best.pt)과 평가에 함께 쓴 결과다. 실사용 초기화나 독립 test 성능이 아니다.
 
+> **후속 결과로 해석 수정 (2026-11-27, [OMY_ROBOT_MISMATCH_RESULTS.md](OMY_ROBOT_MISMATCH_RESULTS.md)):** 아래 결론 1의 "로봇 정보의 추가 기여"는 너무 강한 표현이다. 추론 때 로봇 상태를 틀리게 넣어도(다른 시퀀스의 로봇, 첫 프레임 고정, 지연, 노이즈) cylinder_A_04의 개선은 거의 그대로 남았다(사라진 차이 비율 최대 0.20). 로봇 점을 아예 빼면 개선이 사라졌다. 또 cylinder_A_04에서 앞선 내용은 위치가 아니라 긴 축 회전이다(평균 회전 오차 geometry 4.8°, cad-only 56.9°, visual-ft 39.8°, 위치 오차는 모두 약 1mm). 아래 본문의 수치는 바뀌지 않았다.
+
 ## 결론
 
 1. **부분 가림에서는 로봇 정보의 추가 기여가 3/3 seed에서 분명하다.** cylinder_A_04(가시 16–50%) 평균 오차는 geometry 1.27–1.63mm, cad-only 4.70–10.07mm, visual-ft 5.03–5.16mm다. CAD-only는 visual-ft와 같은 수준이라, 이 개선은 기하 분기를 붙인 효과나 물체 형상 조건화로 설명되지 않는다.

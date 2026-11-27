@@ -1,0 +1,24 @@
+{
+  "written_before_any_005_rollout": true,
+  "date": "2026-11-27",
+  "experiment_1_robot_state_mismatch": {
+    "models": "existing temporal-geometry-s{42,43,44}/best.pt from omy_validation_5080_004 (no retraining)",
+    "initialization": "oracle-first-frame (same initial poses as 004)",
+    "perturbations": ["none (matched rerun)", "delay-3 (100 ms)", "delay-15 (500 ms)", "zero-velocity", "freeze-first", "swap-sequence (donor = next validation sequence, sorted, cyclic)", "joint-noise-0.002 rad", "joint-noise-0.02 rad (iid per frame and joint, seed 2026)"],
+    "scope": "only the refiner's robot input changes; camera, images, timestamps, GT, scoring unchanged",
+    "primary_readout": "cylinder_A_04 mean error per seed vs the same seed's unperturbed geometry and 004 cad-only",
+    "interpretation_rule": "Robot state counts as used if a gross corruption (swap-sequence, freeze-first, delay-15) removes at least half of the seed-matched geometry-vs-cad-only gap on cylinder_A_04 in 3/3 seeds. If cylinder_A_04 changes by less than 0.3 mm under all corruptions in all seeds, report that the gain is not explained by the robot state values.",
+    "also_reported": "all9, easy7, cylinder_C_04; no perturbation or setting is selected using these results"
+  },
+  "experiment_3_registered_initialization": {
+    "initial_poses": "initial-registered-v2: upstream FoundationPose.register on frame 0, dataset oracle visible mask, 5 iterations, seed 0, one shot, mycpp.cluster_poses via python port (native extension not built)",
+    "label": "external initialization with segmentation oracle; not pose oracle",
+    "methods": "visual (pretrained), kinematic-refine, visual-ft/cad-only/geometry seeds 42-44 (004 checkpoints)",
+    "settings": "identical to 004 except initial poses"
+  },
+  "experiment_2_supplementary_symmetric_metric": {
+    "metric": "ADD-S (mean nearest-neighbour distance, 4096 evaluation points) plus translation and rotation error",
+    "status": "supplementary only. The user confirmed marker roll matters, so the primary metric stays the non-symmetric surface error and ADD-S never replaces it."
+  },
+  "aborted_attempt": "initial-registered/ (empty debug dir only) failed because mycpp was not built; kept, not reused"
+}

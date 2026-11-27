@@ -1,0 +1,63 @@
+{
+  "initialization": "external",
+  "method": "upstream FoundationPose.register on frame 0",
+  "mask": "dataset oracle visible object mask, frame 0 only (segmentation oracle; no pose GT)",
+  "register_iterations": 5,
+  "seed": 0,
+  "mycpp_cluster_poses": "python-port",
+  "retries": 0,
+  "weights_sha256": {
+    "2023-10-28-18-33-37": "774700586ddc435d408fc01c9809c43e151232936369dfbea0f0f964ba471d60",
+    "2024-01-11-20-02-45": "81924d384bf5c26c646ee4783104982ae3d1e049c181c36641b6a7aeae494c26"
+  },
+  "note": "One registration per sequence; shared by every method and seed. Frame-0 errors in registration_error.json were computed after all poses were saved and were not used for any choice.",
+  "sequences": [
+    "asymmetric_A_04",
+    "asymmetric_B_04",
+    "asymmetric_C_04",
+    "box_A_04",
+    "box_B_04",
+    "box_C_04",
+    "cylinder_A_04",
+    "cylinder_B_04",
+    "cylinder_C_04"
+  ],
+  "inputs": {
+    "asymmetric_A_04": {
+      "frame_id": "000000",
+      "mask_pixels": 1455
+    },
+    "asymmetric_B_04": {
+      "frame_id": "000000",
+      "mask_pixels": 1455
+    },
+    "asymmetric_C_04": {
+      "frame_id": "000000",
+      "mask_pixels": 986
+    },
+    "box_A_04": {
+      "frame_id": "000000",
+      "mask_pixels": 774
+    },
+    "box_B_04": {
+      "frame_id": "000000",
+      "mask_pixels": 774
+    },
+    "box_C_04": {
+      "frame_id": "000000",
+      "mask_pixels": 678
+    },
+    "cylinder_A_04": {
+      "frame_id": "000000",
+      "mask_pixels": 442
+    },
+    "cylinder_B_04": {
+      "frame_id": "000000",
+      "mask_pixels": 442
+    },
+    "cylinder_C_04": {
+      "frame_id": "000000",
+      "mask_pixels": 241
+    }
+  }
+}

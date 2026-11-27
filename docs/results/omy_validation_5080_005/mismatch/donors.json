@@ -1,0 +1,11 @@
+{
+  "asymmetric_A_04": "asymmetric_B_04",
+  "asymmetric_B_04": "asymmetric_C_04",
+  "asymmetric_C_04": "box_A_04",
+  "box_A_04": "box_B_04",
+  "box_B_04": "box_C_04",
+  "box_C_04": "cylinder_A_04",
+  "cylinder_A_04": "cylinder_B_04",
+  "cylinder_B_04": "cylinder_C_04",
+  "cylinder_C_04": "asymmetric_A_04"
+}
